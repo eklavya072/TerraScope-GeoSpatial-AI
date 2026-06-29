@@ -2,7 +2,6 @@
 
 **TerraScope** is a satellite image land cover classification system powered by a deep learning model. It provides an interactive web interface for uploading satellite imagery, running real-time AI inference, and visualizing classification confidence across 10 EuroSAT land cover classes.
 
-![Hero Screenshot]()
 
 ---
 
@@ -11,17 +10,19 @@
 ### Upload & Classify
 Upload satellite or aerial imagery (PNG, JPG, JPEG, TIFF) and run inference against a trained ResNet50-based model. The app accepts images through a clean inline upload control and immediately makes them available for classification.
 
-![Upload Interface]()
+<img width="696" height="725" alt="Screenshot 2026-06-30 at 2 17 59 AM" src="https://github.com/user-attachments/assets/e40c863c-b09f-44c1-98a2-dd6025b9c1de" />
 
 ### Real-Time AI Predictions
 Once an image is uploaded, click **Run Classification** to invoke the model. The system processes the image and returns the predicted land cover class along with a confidence score.
 
-![Classification Result]()
+<img width="2938" height="1878" alt="image" src="https://github.com/user-attachments/assets/aafa194f-8b40-40c6-bef0-b037feeff9f3" />
+
 
 ### Confidence Score Chart
 A horizontal bar chart displays the model's confidence for all 10 EuroSAT classes — AnnualCrop, Forest, HerbaceousVegetation, Highway, Industrial, Pasture, PermanentCrop, Residential, River, and SeaLake. This gives immediate insight into the model's reasoning and how decisively it classified the image.
 
-![Confidence Chart]()
+<img width="1068" height="1034" alt="image" src="https://github.com/user-attachments/assets/bdf1a581-7676-4064-ba25-44aa4b2811cd" />
+
 
 ### Status Tracking
 The classification panel includes a real-time status indicator that transitions from IDLE → PROCESSING → COMPLETE, providing clear feedback on what the system is doing.
@@ -29,7 +30,8 @@ The classification panel includes a real-time status indicator that transitions 
 ### Model Evaluation
 The Charts section includes a model performance graph (training accuracy & loss curves) so users can assess the model's training history and generalization quality.
 
-![Model Evaluation]()
+<img width="3366" height="1886" alt="image" src="https://github.com/user-attachments/assets/cb5d845c-f73e-41e2-b2e4-173c0e71e080" />
+
 
 ### Image Analysis Tools
 Analyze uploaded images beyond classification:
@@ -38,12 +40,18 @@ Analyze uploaded images beyond classification:
 - **Edge Detection** — Visualize edges using standard algorithms
 - **Intensity Map** — Interactive Plotly-based intensity heatmap
 
-![Image Analysis]()
+  
+<img width="2924" height="2024" alt="image" src="https://github.com/user-attachments/assets/679d2c4f-5380-41c5-a780-54748b5b5180" />
 
-### Land Cover Class Reference
+
+<img width="2916" height="1876" alt="image" src="https://github.com/user-attachments/assets/51b1203b-50c0-4057-b59a-0297e30afb6b" />
+
+
+### TerraScope Class Reference
 The Classes page provides a browsable reference for all 10 EuroSAT categories, each with a description and representative sample image displayed in collapsible expanders.
 
-![Classes Reference]()
+<img width="3396" height="1894" alt="image" src="https://github.com/user-attachments/assets/f478cb64-6884-4ec3-8a31-b333fa542085" />
+
 
 ---
 

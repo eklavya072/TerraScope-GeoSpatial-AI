@@ -19,8 +19,7 @@ CLASS_NAMES = {
 # Model configuration
 MODEL_CONFIG = {
     'input_shape': (64, 64, 3),
-    'model_path': 'models/ResNet50_eurosat.h5',
-    'best_model_path': 'models/model.weights.best.keras',
+    'model_path': 'models/resnet50_eurosat_ft.h5',
     'indices_path': 'models/class_indices.npy'
 }
 

@@ -30,6 +30,8 @@ if 'classification_result' not in st.session_state:
     st.session_state.classification_result = None
 if 'classification_fig' not in st.session_state:
     st.session_state.classification_fig = None
+if 'classification_status' not in st.session_state:
+    st.session_state.classification_status = 'idle'
 
 mh = st.session_state.model_handler
 viz = st.session_state.visualizer
@@ -696,6 +698,7 @@ if st.session_state.page == "Home":
             st.session_state.uploaded_image_name = uploaded_file.name
             st.session_state.classification_result = None
             st.session_state.classification_fig = None
+            st.session_state.classification_status = 'idle'
         has_image = True
         image_bytes = st.session_state.uploaded_image
     elif 'uploaded_image' in st.session_state and st.session_state.uploaded_image is not None:
@@ -727,13 +730,15 @@ if st.session_state.page == "Home":
         st.markdown('<h3 class="section-title">Classification</h3>', unsafe_allow_html=True)
 
         result = st.session_state.classification_result
-        show_results = result is not None
+        status = st.session_state.classification_status
+        show_results = result is not None and status == 'complete'
 
-        status_badge = "badge-complete" if show_results else "badge-idle"
-        status_text = "COMPLETE" if show_results else "IDLE"
-        status_msg = "Classification finished successfully." if show_results else "Ready to begin analysis..."
-        status_icon = "check_circle" if show_results else "progress_activity"
-        icon_class = "" if show_results else "spin"
+        status_map = {
+            'idle': ('badge-idle', 'IDLE', 'Ready to begin analysis...', 'progress_activity', 'spin'),
+            'processing': ('badge-processing', 'PROCESSING', 'Analyzing image features...', 'hourglass_top', 'spin'),
+            'complete': ('badge-complete', 'COMPLETE', 'Classification finished successfully.', 'check_circle', ''),
+        }
+        status_badge, status_text, status_msg, status_icon, icon_class = status_map[status]
 
         with st.container(border=True):
             st.markdown(f"""
@@ -747,9 +752,9 @@ if st.session_state.page == "Home":
                 </div>
             """, unsafe_allow_html=True)
 
-            if has_image:
-                if st.button("Run Classification", key="classify_btn", use_container_width=True):
-                    with st.spinner(""):
+            if status == 'processing' and has_image:
+                try:
+                    with st.spinner("Classifying image..."):
                         pred_result = mh.predict(image_bytes)
                         class_names = [
                             mh.class_indices.get(str(i), f"Class_{i}")
@@ -760,7 +765,15 @@ if st.session_state.page == "Home":
                         )
                         st.session_state.classification_result = pred_result
                         st.session_state.classification_fig = fig
+                        st.session_state.classification_status = 'complete'
                         st.rerun()
+                except Exception as e:
+                    st.error(f"Classification failed: {e}")
+                    st.session_state.classification_status = 'idle'
+            elif has_image:
+                if st.button("Run Classification", key="classify_btn", use_container_width=True):
+                    st.session_state.classification_status = 'processing'
+                    st.rerun()
 
             if show_results:
                 result = st.session_state.classification_result
@@ -842,13 +855,13 @@ elif st.session_state.page == "Classes":
     """, unsafe_allow_html=True)
 
     class_info = [
-        ("AnnualCrop", "Agricultural areas where crops are planted and harvested within a single year.", "assets/anualcrop.jpeg"),
+        ("AnnualCrop", "Agricultural areas where crops are planted and harvested within a single year.", "assets/annualcrop.jpeg"),
         ("Forest", "Areas dominated by trees, forming a continuous canopy.", "assets/forest.jpeg"),
-        ("HerbaceousVegetation", "Areas covered by non-woody plants and grasses.", "assets/herbascious vegetation.jpeg"),
+        ("HerbaceousVegetation", "Areas covered by non-woody plants and grasses.", "assets/herbaceous_vegetation.jpeg"),
         ("Highway", "Major roads and transportation infrastructure.", "assets/highway.jpeg"),
         ("Industrial", "Areas containing factories, warehouses, and industrial facilities.", "assets/industrial.jpeg"),
         ("Pasture", "Land used for grazing livestock.", "assets/pasture.avif"),
-        ("PermanentCrop", "Agricultural areas with long-term crops like orchards and vineyards.", "assets/permanent crop.jpeg"),
+        ("PermanentCrop", "Agricultural areas with long-term crops like orchards and vineyards.", "assets/permanent_crop.jpeg"),
         ("Residential", "Areas containing houses and residential buildings.", "assets/residential.png"),
         ("River", "Natural watercourses and their immediate surroundings.", "assets/river.jpeg"),
         ("SeaLake", "Large bodies of water including seas and lakes.", "assets/sealake.jpeg"),
@@ -863,3 +876,4 @@ elif st.session_state.page == "Classes":
                     st.image(image_path, caption=f"Example of {name}", use_container_width=True)
                 else:
                     st.info(f"Demo image for {name} not found")
+

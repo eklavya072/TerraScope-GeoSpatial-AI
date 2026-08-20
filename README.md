@@ -8,7 +8,7 @@
 ## Features
 
 ### Upload & Classify
-Upload satellite or aerial imagery (PNG, JPG, JPEG, TIFF) and run inference against a trained ResNet50-based model. The app accepts images through a clean inline upload control and immediately makes them available for classification.
+Upload satellite or aerial imagery (PNG, JPG, JPEG, TIFF) and run inference against a fine-tuned ResNet50-based model. The app accepts images through a clean inline upload control and immediately makes them available for classification.
 
 <img width="696" height="725" alt="Screenshot 2026-06-30 at 2 17 59 AM" src="https://github.com/user-attachments/assets/e40c863c-b09f-44c1-98a2-dd6025b9c1de" />
 
@@ -88,7 +88,7 @@ pip install -r requirements.txt
 
 ### Download the Model
 
-The pretrained model weights (`ResNet50_eurosat.h5`) and class index mapping (`class_indices.npy`) are included in the repository under `models/`. If you need to retrain from scratch, use the provided `train.py` script or the `Train_on_Colab.ipynb` notebook.
+The pretrained model weights (`resnet50_eurosat_ft.h5`) and class index mapping (`class_indices.npy`) are included in the repository under `models/`. If you need to retrain from scratch, use the provided `train_resnet50.py` / `finetune_resnet50.py` scripts or the `Train_ResNet50_Colab.ipynb` notebook.
 
 ### Run the App
 
@@ -117,15 +117,16 @@ Open your browser to `http://localhost:8501` (or the URL shown in the terminal).
 │   └── config.toml           # Streamlit server configuration
 ├── assets/                   # Static images (class samples, hero, model perf chart)
 ├── models/                   # Trained model weights and class indices
-│   ├── ResNet50_eurosat.h5
+│   ├── resnet50_eurosat.h5      # ResNet50, frozen backbone (head-only training)
+│   ├── resnet50_eurosat_ft.h5   # ResNet50, fine-tuned (served model)
 │   └── class_indices.npy
 ├── app.py                    # Main Streamlit application entry point
 ├── config.py                 # Class names, model & data configuration
 ├── model_handler.py          # TensorFlow model loading and inference
 ├── visualizer.py             # Plotly/Matplotlib chart generation
-├── data_processor.py         # Image preprocessing utilities
-├── train.py                  # Model training script
-├── Train_on_Colab.ipynb      # Google Colab training notebook
+├── train_resnet50.py         # ResNet50 training script (frozen backbone)
+├── finetune_resnet50.py      # ResNet50 fine-tuning script (unfreezes last stage)
+├── Train_ResNet50_Colab.ipynb # Google Colab training notebook
 └── requirements.txt          # Python dependencies
 ```
 
@@ -133,11 +134,11 @@ Open your browser to `http://localhost:8501` (or the URL shown in the terminal).
 
 ## Model Details
 
-- **Architecture**: ResNet50 (pretrained on ImageNet, fine-tuned on EuroSAT)
+- **Architecture**: ResNet50 (pretrained on ImageNet, fine-tuned on EuroSAT — last stage unfrozen)
 - **Input shape**: 64 × 64 × 3 (RGB)
 - **Output**: 10 EuroSAT land cover classes
 - **Training data**: [EuroSAT](https://github.com/phelber/eurosat) dataset (Sentinel-2 satellite imagery)
-- **Performance**: ~87.8% validation accuracy
+- **Performance**: 95.67% test accuracy after fine-tuning
 
 ---
 

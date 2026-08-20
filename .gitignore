@@ -8,10 +8,18 @@ __pycache__/
 .DS_Store
 ._*
 .Spotlight-V100
+
+# Local tool state (unrelated to the project)
+.freebuff/
 .Trashes
 
 # EuroSAT dataset (downloaded at runtime)
 eurosat_dataset/
+
+# Generated test fixtures
+tests/smoke_images/
+tests/_scene/
+tests/benchmark_confusion_matrix.png
 
 # Streamlit secrets
 .streamlit/secrets.toml

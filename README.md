@@ -1,7 +1,13 @@
 # TerraScope — Geospatial AI Land Cover Classification
 
-**TerraScope** is a satellite image land cover classification system powered by a deep learning model. It provides an interactive web interface for uploading satellite imagery, running real-time AI inference, and visualizing classification confidence across 10 EuroSAT land cover classes.
+[![Python](https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/streamlit-1.28%2B-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![TensorFlow](https://img.shields.io/badge/tensorflow-2.16-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
+[![Model](https://img.shields.io/badge/model-ResNet50%20%2895.67%25%20acc%29-informational)](#model-details)
+[![License: MIT](https://img.shields.io/github/license/eklavya072/TerraScope-GeoSpatial-AI)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/eklavya072/TerraScope-GeoSpatial-AI)](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/commits/master)
 
+**TerraScope** is a satellite image land cover classification system powered by a deep learning model. It provides an interactive web interface for uploading satellite imagery, running real-time AI inference, and visualizing classification confidence across 10 EuroSAT land cover classes.
 
 ---
 
@@ -115,7 +121,7 @@ Open your browser to `http://localhost:8501` (or the URL shown in the terminal).
 ```
 ├── .streamlit/
 │   └── config.toml           # Streamlit server configuration
-├── assets/                   # Static images (class samples, hero, model perf chart)
+├── assets/                   # Static images (class samples, satellite banner, model perf chart)
 ├── models/                   # Trained model weights and class indices
 │   ├── resnet50_eurosat.h5      # ResNet50, frozen backbone (head-only training)
 │   ├── resnet50_eurosat_ft.h5   # ResNet50, fine-tuned (served model)
@@ -154,7 +160,7 @@ Edit `config.py` to adjust:
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 

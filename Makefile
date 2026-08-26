@@ -57,8 +57,11 @@ terminal first."
 	OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 \
 	$(PY) -m bench.benchmark --model $(MODEL) --seeds $(SEEDS)
 
+# report regenerates the tables and figure, then injects them into README.md
+# between generated markers, so no README number is ever hand-typed.
 report: setup
 	$(PY) -m bench.report
+	$(PY) scripts/render_readme.py
 
 # The whole pipeline from a clean clone.
 all: data split train export bench report

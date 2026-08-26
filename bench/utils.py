@@ -43,6 +43,50 @@ def _sysctl(key: str) -> str:
         return "unknown"
 
 
+def power_state() -> dict:
+    """macOS power/thermal state at measurement time.
+
+    Low Power Mode throttles the CPU, and running on battery can engage
+    additional power capping, so a latency or energy figure measured under
+    either is not comparable to one measured without. Recording the state per
+    run means a reader can tell which regime produced a number instead of
+    taking the README's word for it.
+    """
+    state = {"low_power_mode": None, "power_source": None, "thermal_pressure": None}
+    try:
+        custom = subprocess.check_output(["pmset", "-g", "custom"], text=True)
+        section = None
+        modes = {}
+        for line in custom.splitlines():
+            if line.strip().endswith("Power:"):
+                section = line.strip().rstrip(":").strip()
+            elif "lowpowermode" in line and section:
+                modes[section] = line.split()[-1]
+        state["low_power_mode"] = modes or None
+    except Exception:
+        pass
+    try:
+        batt = subprocess.check_output(["pmset", "-g", "batt"], text=True)
+        state["power_source"] = ("AC" if "AC Power" in batt else
+                                 "battery" if "Battery Power" in batt else "unknown")
+        state["battery_line"] = next(
+            (l.strip() for l in batt.splitlines() if "InternalBattery" in l), None)
+    except Exception:
+        pass
+    try:
+        therm = subprocess.check_output(
+            ["pmset", "-g", "therm"], text=True, stderr=subprocess.DEVNULL)
+        # When nothing has throttled, pmset reports "No thermal warning level
+        # has been recorded" -- which is itself the evidence we want, so the
+        # whole output is kept rather than filtered for a warning that is
+        # absent precisely when the run was clean.
+        state["thermal_pressure"] = " | ".join(
+            l.strip() for l in therm.splitlines() if l.strip()) or None
+    except Exception:
+        pass
+    return state
+
+
 def environment() -> dict:
     """Hardware + software fingerprint recorded with every result row."""
     import onnxruntime as ort
@@ -61,6 +105,7 @@ def environment() -> dict:
         "timm": timm.__version__,
         "onnxruntime": ort.__version__,
         "numpy": np.__version__,
+        "power_state": power_state(),
     }
 
 

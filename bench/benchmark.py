@@ -161,6 +161,22 @@ def main() -> int:
     split_sha = utils.verify_split(args.split)
     env = utils.environment()
 
+    # A throttled or battery-capped machine produces latency and energy numbers
+    # that are not comparable to anything else, including the other rows of this
+    # same matrix. Warn loudly rather than quietly recording a number the reader
+    # would have no way to know was measured under a different power regime.
+    ps = env["power_state"]
+    lpm = (ps.get("low_power_mode") or {})
+    if any(v == "1" for v in lpm.values()):
+        print("WARNING: macOS Low Power Mode is ENABLED. It throttles the CPU, so "
+              "latency and energy figures measured now are not comparable to "
+              "figures measured with it off. Disable it in System Settings > "
+              "Battery before a publishable run.", flush=True)
+    if ps.get("power_source") == "battery":
+        print("WARNING: running on battery. Connect AC power -- battery operation "
+              "can engage additional power capping mid-run and will not survive "
+              "the full matrix.", flush=True)
+
     ds = EuroSATFold("test", args.split)
     x_test = np.stack([ds[i][0].numpy() for i in range(len(ds))])
     y_test = np.array([ds[i][1] for i in range(len(ds))])

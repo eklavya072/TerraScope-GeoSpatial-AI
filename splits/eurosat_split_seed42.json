@@ -1,0 +1,72 @@
+{
+  "corpus_manifest_sha256": "feefa5e365ffbf7cf1bf39f68dc5e96efc80f5234d9c1b91889277593b3627e1",
+  "dataset": "EuroSAT (RGB), Helber et al. -- MIT licensed",
+  "fold_counts": {
+    "test": 2700,
+    "train": 18900,
+    "val": 5400
+  },
+  "generated": "2026-08-26",
+  "generator": "scripts/make_split.py",
+  "n_total": 27000,
+  "per_class_counts": {
+    "AnnualCrop": {
+      "test": 300,
+      "train": 2100,
+      "val": 600
+    },
+    "Forest": {
+      "test": 300,
+      "train": 2100,
+      "val": 600
+    },
+    "HerbaceousVegetation": {
+      "test": 300,
+      "train": 2100,
+      "val": 600
+    },
+    "Highway": {
+      "test": 250,
+      "train": 1750,
+      "val": 500
+    },
+    "Industrial": {
+      "test": 250,
+      "train": 1750,
+      "val": 500
+    },
+    "Pasture": {
+      "test": 200,
+      "train": 1400,
+      "val": 400
+    },
+    "PermanentCrop": {
+      "test": 250,
+      "train": 1750,
+      "val": 500
+    },
+    "Residential": {
+      "test": 300,
+      "train": 2100,
+      "val": 600
+    },
+    "River": {
+      "test": 250,
+      "train": 1750,
+      "val": 500
+    },
+    "SeaLake": {
+      "test": 300,
+      "train": 2100,
+      "val": 600
+    }
+  },
+  "ratios": {
+    "test": 0.1,
+    "train": 0.7,
+    "val": 0.2
+  },
+  "seed": 42,
+  "split_csv_sha256": "b77443792ba4b11439ed220b3dea699ce61e48e0a0af49c51fb6a8cf43b0595d",
+  "stratified_by": "class label"
+}

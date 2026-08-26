@@ -200,3 +200,12 @@ models/*
 !models/*.h5
 !models/*.npy
 !models/*.keras
+
+# --- benchmark artefacts -------------------------------------------------
+# The EuroSAT corpus is redownloaded by scripts/prepare_data.py; only its
+# sha256 manifest and the split file are version-controlled.
+data/eurosat_rgb/
+data/cache/
+.venv-bench/
+results/checkpoints/
+results/log_*.txt

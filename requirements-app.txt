@@ -12,3 +12,8 @@ matplotlib>=3.3.0
 opencv-python>=4.5.0
 # Needed by train_resnet50.py / finetune_resnet50.py (EuroSAT loading from Hugging Face)
 datasets>=3.0.0
+
+# NOTE: this file installs the LEGACY Streamlit demo app only. The benchmark
+# has its own pinned, locked environment (pyproject.toml + uv.lock) and never
+# imports TensorFlow -- keeping the two apart is what stops a stray TF thread
+# pool from contaminating a measured inference run.

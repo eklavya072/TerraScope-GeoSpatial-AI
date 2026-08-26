@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import json
 import math
 import os
 import time
@@ -27,6 +28,29 @@ from bench.data import EuroSATFold
 from bench.models import build, param_count
 
 RUNS_JSONL = os.path.join(RESULTS_DIR, "runs.jsonl")
+
+
+def completed_runs(split_sha: str) -> set[tuple[str, int]]:
+    """(model, seed) pairs already recorded under the CURRENT recipe and split.
+
+    Long matrices get interrupted -- a laptop is closed, a session is killed,
+    the machine is needed for something else. A run is only written to
+    runs.jsonl once it finishes, so a partial run leaves nothing behind and
+    resuming is safe. Pairs recorded under a different recipe or split hash are
+    deliberately NOT treated as done: they answer a different question.
+    """
+    done: set[tuple[str, int]] = set()
+    if not os.path.exists(RUNS_JSONL):
+        return done
+    with open(RUNS_JSONL) as fh:
+        for line in fh:
+            if not line.strip():
+                continue
+            r = json.loads(line)
+            if (r.get("kind") == "train" and r.get("recipe_hash") == recipe_hash()
+                    and r.get("split_sha256") == split_sha):
+                done.add((r["model"], r["seed"]))
+    return done
 
 
 def pick_device(requested: str) -> torch.device:
@@ -149,6 +173,10 @@ def main() -> int:
     ap.add_argument("--seeds", default="0", help="comma-separated seeds")
     ap.add_argument("--device", default="auto", choices=["auto", "mps", "cpu", "cuda"])
     ap.add_argument("--split", default=SPLIT_CSV)
+    ap.add_argument("--skip-done", action="store_true",
+                    help="skip (model, seed) pairs already in results/runs.jsonl "
+                         "under this recipe and split -- use when resuming an "
+                         "interrupted matrix")
     args = ap.parse_args()
 
     names = list(MODEL_ZOO) if args.model == "all" else args.model.split(",")
@@ -157,8 +185,14 @@ def main() -> int:
     print(f"device={device}  recipe={recipe_hash()}  models={names}  seeds={seeds}",
           flush=True)
 
+    done = completed_runs(utils.verify_split(args.split)) if args.skip_done else set()
+    if done:
+        print(f"skipping {len(done)} completed run(s): {sorted(done)}", flush=True)
+
     for name in names:
         for seed in seeds:
+            if (name, seed) in done:
+                continue
             train_one(name, seed, device, args.split)
     return 0
 

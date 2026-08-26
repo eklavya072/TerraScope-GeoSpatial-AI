@@ -12,13 +12,14 @@ SEEDS ?= 0,1,2,3,4
 MODEL ?= all
 DEVICE ?= auto
 
-.PHONY: help setup data split train export bench report all clean-results
+.PHONY: help setup data split train train-resume export bench report all clean-results
 
 help:
 	@echo "make setup    install the locked benchmark environment"
 	@echo "make data     download EuroSAT and write the sha256 manifest"
 	@echo "make split    regenerate the committed deterministic split"
 	@echo "make train    train MODEL=$(MODEL) over SEEDS=$(SEEDS)"
+	@echo "make train-resume  resume an interrupted training matrix"
 	@echo "make export   export checkpoints to ONNX fp32 + int8 dynamic/static"
 	@echo "make bench    full measurement matrix (accuracy, latency, memory, energy)"
 	@echo "make report   rebuild the results table and Pareto curve from results/"
@@ -34,6 +35,12 @@ split: data
 
 train: setup
 	$(PY) -m bench.train --model $(MODEL) --seeds $(SEEDS) --device $(DEVICE)
+
+# Resume an interrupted matrix: re-runs only the (model, seed) pairs that are
+# not already recorded under the current recipe and split hashes.
+train-resume: setup
+	caffeinate -is $(PY) -m bench.train --model $(MODEL) --seeds $(SEEDS) \
+	    --device $(DEVICE) --skip-done
 
 export: setup
 	$(PY) -m bench.export_onnx --model $(MODEL) --seeds $(SEEDS)

@@ -89,3 +89,22 @@ def recipe_hash() -> str:
     """Stable short hash of the training contract, embedded in every result."""
     blob = json.dumps(RECIPE, sort_keys=True).encode()
     return hashlib.sha256(blob).hexdigest()[:12]
+
+
+# ------------------------------------------------------------------ carbon ----
+
+# Converting measured joules to CO2e requires a grid carbon-intensity
+# assumption, and that assumption dominates the result -- the same workload is
+# roughly 15x more carbon-intensive on a coal-heavy grid than on a nuclear or
+# hydro-heavy one. It is therefore stated explicitly here and reprinted next to
+# every CO2e figure rather than buried in a library default.
+#
+# Default: world average electricity generation intensity. Override with the
+# --grid-intensity flag on bench.report when targeting a specific grid.
+GRID_INTENSITY_G_CO2E_PER_KWH = 481.0
+GRID_INTENSITY_SOURCE = (
+    "world average grid carbon intensity, ~481 gCO2e/kWh; substitute your own "
+    "grid's figure -- national values range from under 50 (hydro/nuclear-heavy) "
+    "to over 700 (coal-heavy), and this constant scales every CO2e number "
+    "reported here linearly"
+)

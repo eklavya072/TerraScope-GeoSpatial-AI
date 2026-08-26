@@ -12,13 +12,14 @@ SEEDS ?= 0,1,2,3,4
 MODEL ?= all
 DEVICE ?= auto
 
-.PHONY: help setup data split train bench report clean-results
+.PHONY: help setup data split train export bench report all clean-results
 
 help:
 	@echo "make setup    install the locked benchmark environment"
 	@echo "make data     download EuroSAT and write the sha256 manifest"
 	@echo "make split    regenerate the committed deterministic split"
 	@echo "make train    train MODEL=$(MODEL) over SEEDS=$(SEEDS)"
+	@echo "make export   export checkpoints to ONNX fp32 + int8 dynamic/static"
 	@echo "make bench    full measurement matrix (accuracy, latency, memory, energy)"
 	@echo "make report   rebuild the results table and Pareto curve from results/"
 
@@ -33,6 +34,27 @@ split: data
 
 train: setup
 	$(PY) -m bench.train --model $(MODEL) --seeds $(SEEDS) --device $(DEVICE)
+
+export: setup
+	$(PY) -m bench.export_onnx --model $(MODEL) --seeds $(SEEDS)
+
+# Thread counts are pinned in the environment as well as in the ORT session:
+# BLAS/OMP backends spawn their own pools and will silently ignore the session
+# setting otherwise, which is the classic way CPU latency numbers stop
+# reproducing on someone else's machine.
+bench: setup
+	@test -s results/power_log.txt || echo "NOTE: results/power_log.txt is empty -- \
+energy columns will be null. Start 'sudo ./scripts/energy_sampler.sh' in another \
+terminal first."
+	OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 \
+	OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 \
+	$(PY) -m bench.benchmark --model $(MODEL) --seeds $(SEEDS)
+
+report: setup
+	$(PY) -m bench.report
+
+# The whole pipeline from a clean clone.
+all: data split train export bench report
 
 clean-results:
 	rm -f results/runs.jsonl results/bench.jsonl

@@ -29,10 +29,17 @@ CHECKPOINT_DIR = os.path.join("results", "checkpoints")
 INPUT_SIZE = 64
 
 # ImageNet-1k channel statistics (Deng et al. 2009), as distributed with
-# torchvision and used by timm's `pretrained_cfg` for every model in the zoo
-# below -- we verified that all five report exactly these values, so one shared
-# normalisation is simultaneously the FAIR choice (identical preprocessing for
-# every architecture) and faithful to each backbone's pretraining.
+# torchvision. Verified against timm's `pretrained_cfg` for all five entries in
+# the zoo below: FOUR of the five (resnet50, both mobilenetv3 variants,
+# efficientnet_lite0) report exactly these values. `mobilevit_s.cvnets_in1k`
+# does NOT -- it reports mean=(0,0,0), std=(1,1,1), i.e. raw [0,1] inputs.
+#
+# We nonetheless apply one shared normalisation to every architecture, because
+# the fairness rule requires identical preprocessing. The consequence is that
+# MobileViT-S alone is fine-tuned under a normalisation that departs from its
+# pretraining convention; full fine-tuning over 20 epochs is expected to absorb
+# this, but it remains a genuine asymmetry and is recorded as such in the README
+# limitations rather than presented as a clean alignment.
 NORM_MEAN = (0.485, 0.456, 0.406)
 NORM_STD = (0.229, 0.224, 0.225)
 

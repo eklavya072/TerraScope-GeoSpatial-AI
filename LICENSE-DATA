@@ -1,0 +1,30 @@
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+The benchmark results data in this repository -- specifically the contents of
+results/ (runs.jsonl, bench.jsonl, summary.json, results_table.md,
+significance.md, pareto.png) and the split definition in splits/ -- is licensed
+under the Creative Commons Attribution 4.0 International License.
+
+The full licence text is available at:
+    https://creativecommons.org/licenses/by/4.0/legalcode
+
+You are free to share and adapt this data for any purpose, including
+commercially, provided you give appropriate credit, provide a link to the
+licence, and indicate if changes were made.
+
+Attribution for the results data:
+    TerraScope: an accuracy-energy benchmark for CPU-only land-cover
+    classification. https://github.com/eklavya072/TerraScope-GeoSpatial-AI
+
+The SOURCE IMAGERY these results are measured against is NOT covered by this
+licence. EuroSAT is distributed under the MIT licence by its authors:
+
+    Helber, P., Bischke, B., Dengel, A., & Borth, D. "EuroSAT: A Novel Dataset
+    and Deep Learning Benchmark for Land Use and Land Cover Classification."
+
+EuroSAT is derived from Copernicus Sentinel-2 data. Copernicus Sentinel data is
+provided under terms granting free access, including reproduction, distribution
+and modification.
+
+The SOURCE CODE in this repository is licensed separately under the MIT licence;
+see LICENSE.

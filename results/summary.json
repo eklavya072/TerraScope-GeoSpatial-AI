@@ -1,0 +1,273 @@
+{
+  "accuracy_over_seeds": {
+    "efficientnet_lite0": {
+      "ci_high": 0.9773584366018239,
+      "ci_low": 0.9747897115463241,
+      "half_width": 0.001284362527749886,
+      "mean": 0.976074074074074,
+      "n": 5,
+      "params": 3383818,
+      "raw": [
+        0.9748148148148148,
+        0.9762962962962963,
+        0.977037037037037,
+        0.9751851851851852,
+        0.977037037037037
+      ],
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "std": 0.0010343881513903046
+    },
+    "mobilenetv3_large": {
+      "ci_high": 0.9727078479009622,
+      "ci_low": 0.9693662261731119,
+      "half_width": 0.0016708108639252144,
+      "mean": 0.971037037037037,
+      "n": 5,
+      "params": 4214842,
+      "raw": [
+        0.9718518518518519,
+        0.9725925925925926,
+        0.9696296296296296,
+        0.9696296296296296,
+        0.9714814814814815
+      ],
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "std": 0.0013456223795988848
+    },
+    "mobilenetv3_small": {
+      "ci_high": 0.9729229123712362,
+      "ci_low": 0.9709289394806155,
+      "half_width": 0.0009969864453103505,
+      "mean": 0.9719259259259259,
+      "n": 5,
+      "params": 1528106,
+      "raw": [
+        0.9714814814814815,
+        0.9714814814814815,
+        0.9733333333333334,
+        0.9718518518518519,
+        0.9714814814814815
+      ],
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "std": 0.0008029438292103396
+    },
+    "mobilevit_s": {
+      "ci_high": 0.9879497140099686,
+      "ci_low": 0.9791613971011425,
+      "half_width": 0.004394158454413011,
+      "mean": 0.9835555555555555,
+      "n": 5,
+      "params": 4944042,
+      "raw": [
+        0.9862962962962963,
+        0.987037037037037,
+        0.9844444444444445,
+        0.9814814814814815,
+        0.9785185185185186
+      ],
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "std": 0.0035389271661011024
+    },
+    "resnet50": {
+      "ci_high": 0.9842077957658886,
+      "ci_low": 0.9781625746044817,
+      "half_width": 0.003022610580703381,
+      "mean": 0.9811851851851852,
+      "n": 5,
+      "params": 23528522,
+      "raw": [
+        0.9840740740740741,
+        0.9807407407407407,
+        0.9818518518518519,
+        0.9774074074074074,
+        0.9818518518518519
+      ],
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "std": 0.0024343224778007565
+    }
+  },
+  "energy_note": "Energy is ESTIMATED from Apple Silicon on-die CPU package power telemetry sampled by powermetrics and integrated over each timed window. It excludes DRAM, display and PSU losses, and is not a wall-socket measurement.",
+  "environment": {
+    "cpu": "Apple M2",
+    "cpu_cores_logical": "8",
+    "cpu_cores_physical": "8",
+    "numpy": "2.5.2",
+    "onnxruntime": "1.29.0",
+    "os": "Darwin 23.6.0 (Darwin Kernel Version 23.6.0)",
+    "platform": "macOS-14.6.1-arm64-arm-64bit",
+    "power_state": {
+      "battery_line": "-InternalBattery-0 (id=6488163)\t7%; discharging; 0:23 remaining present: true",
+      "low_power_mode": {
+        "AC Power": "0",
+        "Battery Power": "0"
+      },
+      "power_source": "battery",
+      "thermal_pressure": "Note: No thermal warning level has been recorded | Note: No performance warning level has been recorded | Note: No CPU power status has been recorded"
+    },
+    "python": "3.12.11",
+    "ram_bytes": "8589934592",
+    "timestamp_utc": "2026-08-27T01:52:08+00:00",
+    "timm": "1.0.28",
+    "torch": "2.9.1"
+  },
+  "grid_intensity_g_co2e_per_kwh": 481.0,
+  "grid_intensity_source": "world average grid carbon intensity, ~481 gCO2e/kWh; substitute your own grid's figure -- national values range from under 50 (hydro/nuclear-heavy) to over 700 (coal-heavy), and this constant scales every CO2e number reported here linearly",
+  "measured": {},
+  "pairwise_significance": {
+    "efficientnet_lite0 vs mobilenetv3_large": {
+      "cohens_d": 4.19705111896881,
+      "diff": 0.005037037037036951,
+      "holm_threshold": 0.00625,
+      "p": 0.0002170793405032607,
+      "significant_holm": true,
+      "significant_uncorrected": true,
+      "t": 6.636120496049884
+    },
+    "efficientnet_lite0 vs mobilenetv3_small": {
+      "cohens_d": 4.479999999999911,
+      "diff": 0.004148148148148123,
+      "holm_threshold": 0.005,
+      "p": 0.00013843176958077457,
+      "significant_holm": true,
+      "significant_uncorrected": true,
+      "t": 7.0835019587770285
+    },
+    "efficientnet_lite0 vs mobilevit_s": {
+      "cohens_d": -2.8696540258457315,
+      "diff": -0.007481481481481533,
+      "holm_threshold": 0.016666666666666666,
+      "p": 0.0072616674251271005,
+      "significant_holm": true,
+      "significant_uncorrected": true,
+      "t": -4.537321409172105
+    },
+    "efficientnet_lite0 vs resnet50": {
+      "cohens_d": -2.732807218615634,
+      "diff": -0.005111111111111177,
+      "holm_threshold": 0.0125,
+      "p": 0.006349036055879578,
+      "significant_holm": true,
+      "significant_uncorrected": true,
+      "t": -4.320947608487552
+    },
+    "mobilenetv3_large vs mobilenetv3_small": {
+      "cohens_d": -0.8022315245577923,
+      "diff": -0.000888888888888828,
+      "holm_threshold": 0.025,
+      "p": 0.24799826638585334,
+      "significant_holm": false,
+      "significant_uncorrected": false,
+      "t": -1.2684394141959636
+    },
+    "mobilenetv3_large vs mobilevit_s": {
+      "cohens_d": -4.675989775734664,
+      "diff": -0.012518518518518484,
+      "holm_threshold": 0.008333333333333333,
+      "p": 0.0006353463877078495,
+      "significant_holm": true,
+      "significant_uncorrected": true,
+      "t": -7.393389003490738
+    },
+    "mobilenetv3_large vs resnet50": {
+      "cohens_d": -5.15971850350972,
+      "diff": -0.010148148148148128,
+      "holm_threshold": 0.005555555555555556,
+      "p": 0.00014941444263864175,
+      "significant_holm": true,
+      "significant_uncorrected": true,
+      "t": -8.158231278203106
+    },
+    "mobilenetv3_small vs mobilevit_s": {
+      "cohens_d": -4.532199613138581,
+      "diff": -0.011629629629629656,
+      "holm_threshold": 0.01,
+      "p": 0.0013725448148626134,
+      "significant_holm": true,
+      "significant_uncorrected": true,
+      "t": -7.1660367940259535
+    },
+    "mobilenetv3_small vs resnet50": {
+      "cohens_d": -5.108427684025932,
+      "diff": -0.0092592592592593,
+      "holm_threshold": 0.0071428571428571435,
+      "p": 0.0005379729225003525,
+      "significant_holm": true,
+      "significant_uncorrected": true,
+      "t": -8.077133371890449
+    },
+    "mobilevit_s vs resnet50": {
+      "cohens_d": 0.7804297738876012,
+      "diff": 0.002370370370370356,
+      "holm_threshold": 0.05,
+      "p": 0.25653328383562585,
+      "significant_holm": false,
+      "significant_uncorrected": false,
+      "t": 1.2339678196475103
+    }
+  },
+  "recipe": {
+    "augmentation": [
+      "random_hflip",
+      "random_vflip",
+      "random_rot90"
+    ],
+    "batch_size": 128,
+    "early_stopping": {
+      "mode": "max",
+      "monitor": "val_acc",
+      "patience": 4,
+      "restore_best_weights": true
+    },
+    "finetune": "full",
+    "input_size": 64,
+    "label_smoothing": 0.1,
+    "lr": 0.0003,
+    "max_epochs": 20,
+    "norm_mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "norm_std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "optimizer": "adamw",
+    "schedule": "cosine",
+    "warmup_epochs": 2,
+    "weight_decay": 0.0001
+  },
+  "recipe_hash": "746abf440ef1",
+  "split_sha256": "b77443792ba4b11439ed220b3dea699ce61e48e0a0af49c51fb6a8cf43b0595d"
+}

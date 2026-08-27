@@ -65,6 +65,13 @@ def export_one(name: str, seed: int, split_csv: str) -> dict[str, str]:
         input_names=["input"], output_names=["logits"],
         dynamic_axes={"input": {0: "batch"}, "logits": {0: "batch"}},
         opset_version=17, do_constant_folding=True,
+        # dynamo=False selects the TorchScript exporter. torch 2.9 defaults to
+        # the dynamo path, whose graphs carry shape metadata that ONNX Runtime's
+        # quantiser rejects during shape inference ("Inferred shape and existing
+        # shape differ in dimension 0: (2048) vs (10)"). Since every model here
+        # must survive int8 quantisation, the exporter that produces
+        # quantisable graphs is the one that matters.
+        dynamo=False,
     )
 
     # Dynamic: weights only, no calibration data needed.

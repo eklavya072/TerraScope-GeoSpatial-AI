@@ -8,6 +8,7 @@ file a reader can inspect.
 
 import csv
 import os
+import zlib
 
 import numpy as np
 import torch
@@ -15,6 +16,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 from bench.config import CLASSES, CORPUS_ROOT, INPUT_SIZE, NORM_MEAN, NORM_STD, SPLIT_CSV
+from bench.utils import sha256_file
 
 CACHE = os.path.join("data", "cache")
 CLASS_TO_IDX = {c: i for i, c in enumerate(CLASSES)}
@@ -31,7 +33,8 @@ def read_split(split_csv: str = SPLIT_CSV) -> dict[str, list[tuple[str, int]]]:
     return folds
 
 
-def _load_fold(fold: str, items: list[tuple[str, int]]) -> tuple[np.ndarray, np.ndarray]:
+def _load_fold(fold: str, items: list[tuple[str, int]],
+               split_sha: str) -> tuple[np.ndarray, np.ndarray]:
     """Decode a fold into a uint8 array, cached so epochs never re-decode JPEGs.
 
     27,000 64x64 tiles are only ~330 MB as uint8, so the whole corpus lives in
@@ -39,7 +42,13 @@ def _load_fold(fold: str, items: list[tuple[str, int]]) -> tuple[np.ndarray, np.
     dominated by the model, which matters when we later attribute energy.
     """
     os.makedirs(CACHE, exist_ok=True)
-    npz = os.path.join(CACHE, f"{fold}_{len(items)}.npz")
+    # The cache key MUST include the split hash. Keying on fold name and row
+    # count alone is not enough: any split of the same 27,000 tiles at the same
+    # 70/20/10 ratios produces identical fold sizes, so a split regenerated
+    # under a different seed would silently reuse the previous fold's cache
+    # while every result row stamped the NEW sha256 -- measuring one split and
+    # claiming another, which defeats the central claim of this repository.
+    npz = os.path.join(CACHE, f"{fold}_{len(items)}_{split_sha[:12]}.npz")
     if os.path.exists(npz):
         z = np.load(npz)
         return z["x"], z["y"]
@@ -66,10 +75,16 @@ class EuroSATFold(Dataset):
     def __init__(self, fold: str, split_csv: str = SPLIT_CSV, augment: bool = False,
                  seed: int = 0):
         items = read_split(split_csv)[fold]
-        self.x, self.y = _load_fold(fold, items)
+        split_sha = sha256_file(split_csv)
+        self.x, self.y = _load_fold(fold, items, split_sha)
         self.augment = augment
         self.fold = fold
-        self._g = torch.Generator().manual_seed(seed * 100_003 + hash(fold) % 100_003)
+        # crc32, not hash(): Python randomises string hashing per interpreter,
+        # so hash("train") differs on every launch and the augmentation stream
+        # would not reproduce across runs. set_seed() exports PYTHONHASHSEED,
+        # but that only affects processes started afterwards, not this one.
+        fold_key = zlib.crc32(fold.encode()) % 100_003
+        self._g = torch.Generator().manual_seed(seed * 100_003 + fold_key)
         self._mean = torch.tensor(NORM_MEAN).view(3, 1, 1)
         self._std = torch.tensor(NORM_STD).view(3, 1, 1)
 

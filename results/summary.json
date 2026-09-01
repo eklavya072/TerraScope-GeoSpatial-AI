@@ -126,17 +126,17 @@
     "os": "Darwin 23.6.0 (Darwin Kernel Version 23.6.0)",
     "platform": "macOS-14.6.1-arm64-arm-64bit",
     "power_state": {
-      "battery_line": "-InternalBattery-0 (id=6488163)\t7%; discharging; 0:23 remaining present: true",
+      "battery_line": "-InternalBattery-0 (id=6488163)\t100%; charged; 0:00 remaining present: true",
       "low_power_mode": {
         "AC Power": "0",
         "Battery Power": "0"
       },
-      "power_source": "battery",
+      "power_source": "AC",
       "thermal_pressure": "Note: No thermal warning level has been recorded | Note: No performance warning level has been recorded | Note: No CPU power status has been recorded"
     },
     "python": "3.12.11",
     "ram_bytes": "8589934592",
-    "timestamp_utc": "2026-08-27T01:52:08+00:00",
+    "timestamp_utc": "2026-09-01T17:09:50+00:00",
     "timm": "1.0.28",
     "torch": "2.9.1"
   },
@@ -4356,5 +4356,90 @@
     "weight_decay": 0.0001
   },
   "recipe_hash": "746abf440ef1",
-  "split_sha256": "b77443792ba4b11439ed220b3dea699ce61e48e0a0af49c51fb6a8cf43b0595d"
+  "split_sha256": "b77443792ba4b11439ed220b3dea699ce61e48e0a0af49c51fb6a8cf43b0595d",
+  "thread_regime_confound": {
+    "t1": {
+      "bimodal": false,
+      "low_power_rows": 149,
+      "minority_fraction": 0.007,
+      "note": "Rows split across two power regimes correlated with position in the session rather than with model identity; cross-model energy comparisons within this thread count are confounded.",
+      "per_model": {
+        "efficientnet_lite0": {
+          "low_power_rows": 30,
+          "rows": 30
+        },
+        "mobilenetv3_large": {
+          "low_power_rows": 29,
+          "rows": 30
+        },
+        "mobilenetv3_small": {
+          "low_power_rows": 30,
+          "rows": 30
+        },
+        "mobilevit_s": {
+          "low_power_rows": 30,
+          "rows": 30
+        },
+        "resnet50": {
+          "low_power_rows": 30,
+          "rows": 30
+        }
+      },
+      "regime_threshold_w": 10.0,
+      "rows": 150
+    },
+    "t4": {
+      "bimodal": true,
+      "low_power_rows": 53,
+      "minority_fraction": 0.353,
+      "note": "Rows split across two power regimes correlated with position in the session rather than with model identity; cross-model energy comparisons within this thread count are confounded.",
+      "per_model": {
+        "efficientnet_lite0": {
+          "low_power_rows": 0,
+          "rows": 30
+        },
+        "mobilenetv3_large": {
+          "low_power_rows": 0,
+          "rows": 30
+        },
+        "mobilenetv3_small": {
+          "low_power_rows": 27,
+          "rows": 30
+        },
+        "mobilevit_s": {
+          "low_power_rows": 0,
+          "rows": 30
+        },
+        "resnet50": {
+          "low_power_rows": 26,
+          "rows": 30
+        }
+      },
+      "regime_threshold_w": 10.0,
+      "rows": 150
+    }
+  },
+  "training_environment": {
+    "cpu": "Apple M2",
+    "cpu_cores_logical": "8",
+    "cpu_cores_physical": "8",
+    "numpy": "2.5.2",
+    "onnxruntime": "1.29.0",
+    "os": "Darwin 23.6.0 (Darwin Kernel Version 23.6.0)",
+    "platform": "macOS-14.6.1-arm64-arm-64bit",
+    "power_state": {
+      "battery_line": "-InternalBattery-0 (id=6488163)\t7%; discharging; 0:23 remaining present: true",
+      "low_power_mode": {
+        "AC Power": "0",
+        "Battery Power": "0"
+      },
+      "power_source": "battery",
+      "thermal_pressure": "Note: No thermal warning level has been recorded | Note: No performance warning level has been recorded | Note: No CPU power status has been recorded"
+    },
+    "python": "3.12.11",
+    "ram_bytes": "8589934592",
+    "timestamp_utc": "2026-08-27T01:52:08+00:00",
+    "timm": "1.0.28",
+    "torch": "2.9.1"
+  }
 }

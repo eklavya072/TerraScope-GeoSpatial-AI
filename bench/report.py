@@ -157,9 +157,52 @@ def build(args) -> dict:
                 **{f"delta_{k}": v for k, v in mean_ci(diffs).items()},
             }
 
+    # ---------------- multi-thread core-placement confound ------------------
+    # The 4-thread windows fall into two clearly separated power regimes that
+    # track WHEN a model was measured, not which model it was -- consistent with
+    # macOS placing the threads on performance vs efficiency cores. Because the
+    # regime correlates with position in the session, cross-model comparisons at
+    # 4 threads are confounded. This is characterised rather than corrected: the
+    # rows are real measurements, but of two different machine configurations.
+    REGIME_W = 10.0
+    thread_regime = {}
+    for threads in sorted({b["threads_intra_op"] for b in bench_all}):
+        sel = [b for b in bench_all if b["threads_intra_op"] == threads
+               and b.get("energy_mean_power_w")]
+        if not sel:
+            continue
+        low = [b for b in sel if b["energy_mean_power_w"] < REGIME_W]
+        per_model = {}
+        for mdl in sorted({b["model"] for b in sel}):
+            ms = [b for b in sel if b["model"] == mdl]
+            per_model[mdl] = {
+                "rows": len(ms),
+                "low_power_rows": sum(1 for b in ms
+                                      if b["energy_mean_power_w"] < REGIME_W),
+            }
+        thread_regime[f"t{threads}"] = {
+            "rows": len(sel),
+            "low_power_rows": len(low),
+            "regime_threshold_w": REGIME_W,
+            # A regime split only counts as a confound when BOTH regimes hold a
+            # substantial share. One stray window in the other regime is noise,
+            # not a second machine configuration.
+            "minority_fraction": round(min(len(low), len(sel) - len(low))
+                                       / len(sel), 3),
+            "bimodal": min(len(low), len(sel) - len(low)) / len(sel) > 0.10,
+            "per_model": per_model,
+            "note": (
+                "Rows split across two power regimes correlated with position in "
+                "the session rather than with model identity; cross-model energy "
+                "comparisons within this thread count are confounded."
+                if low and len(low) < len(sel) else
+                "Single power regime; no core-placement confound detected."),
+        }
+
     summary = {
         "accuracy_over_seeds": accuracy,
         "quantisation_delta": quant_delta,
+        "thread_regime_confound": thread_regime,
         "exclusions": {
             "protocol": "PROTOCOL.md (pre-registered before Phase 5)",
             "windows_total": len(bench_all),
@@ -175,7 +218,13 @@ def build(args) -> dict:
         },
         "pairwise_significance": {f"{a} vs {b}": v for (a, b), v in corrected.items()},
         "measured": measured,
-        "environment": runs[-1]["env"],
+        # The measurement environment is the BENCHMARK's, not the last training
+        # run's. Reading it from runs[-1] labelled the README's
+        # "measurement conditions" table with the training session's date and
+        # power source (battery), contradicting PROTOCOL.md's "on AC power" on
+        # the single most credibility-critical row in the document.
+        "environment": (bench_all[-1]["env"] if bench_all else runs[-1]["env"]),
+        "training_environment": runs[-1]["env"],
         "split_sha256": runs[-1]["split_sha256"],
         "recipe_hash": runs[-1]["recipe_hash"],
         "recipe": runs[-1]["recipe"],

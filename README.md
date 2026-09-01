@@ -139,8 +139,8 @@ the energy.
 
 For a CPU-only ministry server classifying Sentinel-2 RGB tiles, deploy
 **EfficientNet-Lite0 quantised to int8 with static calibration**. It costs 0.67 pp
-of accuracy against the strongest fp32 baseline we measured and 0.90 pp against
-the best model overall, in exchange for 19× less energy, 28× lower p95 latency,
+of accuracy against the ResNet-50 fp32 baseline and 0.90 pp against the most
+accurate model measured (MobileViT-S fp32), in exchange for 19× less energy, 28× lower p95 latency,
 and a 3.8 MB artefact that fits comfortably in a constrained deployment. On a single
 thread it sustains roughly 2,300 images per second (0.43 ms p95), and its 17 MB
 resident footprint leaves the machine free for the rest of its work. If the last 0.9 pp of accuracy genuinely matters —
@@ -257,9 +257,10 @@ they are not portable claims.
 | ONNX Runtime | 1.29.0 |
 | timm | 1.0.28 |
 | NumPy | 2.5.2 |
-| Run date (UTC) | 2026-08-27T01:52:08+00:00 |
-| Power source during measurement | battery |
+| Measurement date (UTC) | 2026-09-01T17:09:50+00:00 |
+| Power source during measurement | AC |
 | macOS Low Power Mode | 0 (AC) |
+| Training environment (affects no reported figure) | 2026-08-27T01:52:08+00:00, battery |
 
 Split file: `splits/eurosat_split_seed42.csv`  
 Split sha256: `b77443792ba4b11439ed220b3dea699ce61e48e0a0af49c51fb6a8cf43b0595d`  
@@ -278,14 +279,33 @@ and the environment (`OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS
 thread counts are the most common reason CPU latency fails to reproduce. 50
 warm-up inferences are discarded before timing; each configuration is then timed
 for at least 1,000 runs *and* at least 20 seconds, and reported as p50/p95/p99
-with variance. The whole matrix ran in one session on AC power with Low Power
+with variance. Timing reuses one fixed input tensor, so the input is resident in
+cache: this isolates model compute from data-loading cost, which is the intent,
+but it means the figures are a lower bound on end-to-end serving latency, which
+would also carry decode and preprocessing. The whole matrix ran in one session on AC power with Low Power
 Mode disabled; `powermetrics` recorded no thermal warning for the duration.
 
 The primary configuration is **1 intra-op thread**, which is both the
 reproducible one and what a shared multi-tenant server realistically grants a
-single inference process. 4-thread rows are also recorded. A notable result
-there: for MobileNetV3-Small, 4 threads is 2.2× faster but uses ~47% *more*
-energy per inference — parallel speed-up is not free.
+single inference process.
+
+⚠️ **The 4-thread rows carry a confound and should not be used for cross-model
+comparison.** Their power draw is bimodal — 53 of 150 windows sat near 6 W and
+the rest near 15.4 W — and the regime tracks *when* a model was measured, not
+which model it was, consistent with macOS scheduling threads onto efficiency
+versus performance cores. ResNet-50 and MobileNetV3-Small were measured almost
+entirely in the low-power regime (26/30 and 27/30 windows); the other three
+entirely in the high-power one. Latency moved with it: ResNet-50 fp32 at 4
+threads measured 5.25 ms at 16 W and 7.9 ms at 4.8 W. The rows are real
+measurements, but of two different machine configurations, so they are shipped
+characterised (`thread_regime_confound` in `results/summary.json`) rather than
+compared. The 1-thread rows show no such split (minority regime 0.7% of windows),
+which is why every headline figure in this README is 1-thread, batch-1.
+
+For reference, within the *same* regime, 4 threads does reduce energy per
+inference: MobileNetV3-Small fp32 goes from 6.97 J/1k at 1 thread to 5.84 J/1k
+at 4 threads (1.50× faster, 16% less energy) at batch 1, and from 6.64 to
+3.06 J/1k (2.19× faster, 54% less energy) at batch 32.
 
 ---
 

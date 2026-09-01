@@ -58,9 +58,12 @@ def render_hardware(summary: dict) -> str:
         f"| ONNX Runtime | {env['onnxruntime']} |",
         f"| timm | {env['timm']} |",
         f"| NumPy | {env['numpy']} |",
-        f"| Run date (UTC) | {env['timestamp_utc']} |",
+        f"| Measurement date (UTC) | {env['timestamp_utc']} |",
         f"| Power source during measurement | {ps.get('power_source', 'not recorded')} |",
         f"| macOS Low Power Mode | {lpm.get('AC Power', 'not recorded')} (AC) |",
+        f"| Training environment (affects no reported figure) | "
+        f"{(summary.get('training_environment') or {}).get('timestamp_utc', 'n/a')}, "
+        f"{((summary.get('training_environment') or {}).get('power_state') or {}).get('power_source', 'n/a')} |",
         "",
         f"Split file: `{summary.get('split_csv', 'splits/eurosat_split_seed42.csv')}`  ",
         f"Split sha256: `{summary['split_sha256']}`  ",

@@ -113,7 +113,10 @@ credibility than the deviation itself.
    before and after the matrix and ≥30 s between runs. This was not enforced;
    runs proceeded back to back. Consequence: no per-window idle baseline, so the
    baseline-drift criterion could not be evaluated, and energy is reported gross.
-   The magnitude of that consequence is quantified above (≤0.78%).
+   The magnitude of the gross-versus-baseline-subtracted difference is quantified
+   above (≤0.78%), but the missing criterion also let a real confound through
+   undetected — see "Confound found after measurement" below. This is the most
+   consequential deviation in this list.
 3. **Sampling interval 200 ms, not 500 ms.** Finer than pre-registered.
 4. **The raw sampler trace is not archived in the repository.** It is ~250 MB
    per session, above GitHub's file limit. `results/power_summary.csv` ships the
@@ -124,6 +127,31 @@ credibility than the deviation itself.
    of runtime. A second column that is arithmetically derived from elapsed time
    is not an independent method, so it would not have been the corroboration the
    pre-registration imagined. This is recorded in the README limitations.
+
+## Confound found after measurement: core placement at 4 threads
+
+The 4-thread windows are bimodal in power: 53 of 150 near 6 W, the remaining 97
+near 15.4 W, with the regime tracking **position in the session** rather than
+model identity. ResNet-50 and MobileNetV3-Small were measured almost entirely in
+the low-power regime (26/30 and 27/30 windows); MobileNetV3-Large,
+EfficientNet-Lite0 and MobileViT-S entirely in the high-power one. Latency moved
+with it — ResNet-50 fp32 t4 b1 measured 5.25 ms at 16 W and 7.9 ms at 4.8 W.
+This is consistent with macOS placing the four threads on efficiency versus
+performance cores.
+
+Consequence: **cross-model energy and latency comparisons at 4 threads are
+confounded** and must not be drawn. The rows are retained and characterised in
+`results/summary.json` under `thread_regime_confound`, not deleted — they are
+real measurements, of two different machine configurations.
+
+The 1-thread rows show no such split (minority regime 0.7% of windows), so every
+headline figure, which is 1-thread batch-1, is unaffected.
+
+This is exactly what the pre-registered **idle-baseline-drift** criterion existed
+to catch, and it is one of the two criteria that were never instrumented
+(deviation 2 above). The criterion was right and the instrumentation was
+missing; that ordering is worth stating plainly rather than presenting the
+confound as an unforeseeable surprise.
 
 ## Known asymmetry
 

@@ -4362,7 +4362,7 @@
       "bimodal": false,
       "low_power_rows": 149,
       "minority_fraction": 0.007,
-      "note": "Rows split across two power regimes correlated with position in the session rather than with model identity; cross-model energy comparisons within this thread count are confounded.",
+      "note": "Single power regime; no core-placement confound detected.",
       "per_model": {
         "efficientnet_lite0": {
           "low_power_rows": 30,

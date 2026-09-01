@@ -31,6 +31,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           lfs: false          # the legacy .h5 demo models are not needed here
+          # tests/test_provenance.py verifies the commit hashes the docs cite as
+          # evidence for the pre-registration. A depth-1 clone has none of that
+          # history and every one of those checks would skip.
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -53,6 +57,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           lfs: false
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -67,12 +72,24 @@ jobs:
           cd splits
           shasum -a 256 -c eurosat_split_seed42.csv.sha256
 
-      - name: README tables are regenerable and unchanged
-        # If a results file is edited without re-running `make report`, or a
-        # table is hand-edited, the rendered README will differ and this fails.
+      - name: Derived artefacts regenerate identically from the raw results
+        # summary.json and the tables are DERIVED from results/bench.jsonl and
+        # results/runs.jsonl. Regenerating them here means a hand-edited or
+        # corrupted summary.json fails CI -- previously only the README was
+        # checked, so drift between bench.jsonl and summary.json passed cleanly,
+        # which is the exact class of failure this job exists to catch.
+        #
+        # pareto.png is excluded deliberately: matplotlib output is not
+        # byte-identical across platforms, so diffing it would fail on Linux for
+        # reasons unrelated to the data.
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
+          uv run python -m bench.report
           uv run python scripts/render_readme.py
-          git diff --exit-code README.md
+          git diff --exit-code -- README.md results/summary.json \
+            results/results_table.md results/significance.md \
+            results/quantisation.md
 
       - name: Every module imports cleanly
         run: |

@@ -164,6 +164,13 @@ def build(args) -> dict:
     # regime correlates with position in the session, cross-model comparisons at
     # 4 threads are confounded. This is characterised rather than corrected: the
     # rows are real measurements, but of two different machine configurations.
+    # Separates the two observed power regimes. The 1-thread windows top out at
+    # 10.24 W and the 4-thread high regime centres near 15.4 W, so the boundary
+    # is wide of the 4-thread split but only 0.24 W above the 1-thread maximum:
+    # exactly one t1 window (mobilenetv3_large int8_dynamic seed 4, 10.24 W)
+    # sits above it. The t1 minority fraction of 0.007 therefore rests on that
+    # single window, which is why a minority threshold -- not the mere existence
+    # of a minority -- decides whether a regime split is called a confound.
     REGIME_W = 10.0
     thread_regime = {}
     for threads in sorted({b["threads_intra_op"] for b in bench_all}):
@@ -172,6 +179,8 @@ def build(args) -> dict:
         if not sel:
             continue
         low = [b for b in sel if b["energy_mean_power_w"] < REGIME_W]
+        minority = min(len(low), len(sel) - len(low)) / len(sel)
+        is_bimodal = minority > 0.10
         per_model = {}
         for mdl in sorted({b["model"] for b in sel}):
             ms = [b for b in sel if b["model"] == mdl]
@@ -187,15 +196,19 @@ def build(args) -> dict:
             # A regime split only counts as a confound when BOTH regimes hold a
             # substantial share. One stray window in the other regime is noise,
             # not a second machine configuration.
-            "minority_fraction": round(min(len(low), len(sel) - len(low))
-                                       / len(sel), 3),
-            "bimodal": min(len(low), len(sel) - len(low)) / len(sel) > 0.10,
+            "minority_fraction": round(minority, 3),
+            "bimodal": is_bimodal,
             "per_model": per_model,
+            # Gated on is_bimodal, NOT on the mere existence of a minority.
+            # Gating on `low and len(low) < len(sel)` made this note contradict
+            # the bimodal flag beside it for the 1-thread rows -- the rows that
+            # carry every headline figure -- in summary.json, which is the
+            # CC-BY-4.0 artefact deposited under the DOI.
             "note": (
                 "Rows split across two power regimes correlated with position in "
                 "the session rather than with model identity; cross-model energy "
                 "comparisons within this thread count are confounded."
-                if low and len(low) < len(sel) else
+                if is_bimodal else
                 "Single power regime; no core-placement confound detected."),
         }
 

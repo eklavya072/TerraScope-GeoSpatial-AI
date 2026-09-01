@@ -101,6 +101,49 @@ activation ranges on every call, and ONNX Runtime's dynamic path handles
 convolutions poorly. It is reported because a negative result that saves someone
 else the experiment is worth publishing.
 
+### Is the energy column just the latency column in different units?
+
+A fair objection, and worth answering with the data rather than deflecting.
+Energy per inference is power × time, so if package power were constant across
+configurations the energy axis would carry no information that latency does not.
+
+At a fixed thread count it is *mostly*, but not entirely, latency. Across the 15
+model × precision configurations at 1 thread, batch 1:
+
+| Quantity | Range | Ratio |
+|---|---|---|
+| p50 latency | 0.285 → 12.006 ms | 48.8× |
+| Energy per 1,000 inferences | 1.56 → 63.12 J | 40.5× |
+| Mean package power | 4.86 → 10.24 W | **2.1×** |
+
+Energy correlates with latency at **r = 0.983**. So most of the energy spread is
+the latency spread, and we say so plainly rather than implying two independent
+findings.
+
+What the remaining 2.1× buys is not nothing:
+
+- **Quantised models draw systematically more power.** Mean package power is
+  5.51 W for fp32, 6.16 W for int8-dynamic and **6.95 W for int8-static** — a 26%
+  increase for static int8 over fp32. Quantisation does not simply make the same
+  work shorter; it makes the CPU work harder while it runs. A latency-only
+  reading would overstate int8's energy advantage.
+- **It reorders one pair.** Ranked by latency, `mobilenetv3_large int8_dynamic`
+  beats `efficientnet_lite0 fp32`; ranked by energy, the order reverses. One
+  swap in fifteen is a small effect, and reporting it as small is the honest
+  framing.
+- **Across thread counts the two decouple properly.** Package power spans 3.7×
+  among the 4-thread windows (4.78 → 17.76 W) against 2.1× at 1 thread. That is
+  where latency alone genuinely misleads about energy — and, as documented above,
+  it is also where core placement confounds the comparison, so we draw no
+  cross-model conclusion from it.
+
+The honest summary: **on this hardware, at a fixed thread count, energy is
+largely a restatement of latency, with a real but second-order power term that
+matters most when comparing precisions.** The energy axis earns its place
+because the deployment question is energy, and because the power term moves in
+the opposite direction to the intuition that int8 is uniformly cheaper — but it
+is not an independent axis, and this README does not claim it is.
+
 ### Accuracy: which differences are real?
 
 <!-- BEGIN:significance -->
@@ -160,9 +203,11 @@ their post-training int8 accuracy is unusable.
 ### Measurement protocol and exclusions
 
 Rejection criteria for measurement windows were **committed before any
-measurement was taken** ([PROTOCOL.md](PROTOCOL.md), commit `000d902`, which
-precedes every commit carrying results). Deciding which windows to discard after
-seeing the numbers would be post-hoc selection.
+measurement was taken** — `bd06ff5` (26 Aug 2026) introduced
+[PROTOCOL.md](PROTOCOL.md) and `bench/exclusion.py`; `1c9fa33` (2 Sep 2026) is
+the first commit carrying `results/bench.jsonl`. Seven days, and the ordering is
+checkable with `git log bd06ff5..1c9fa33`. Deciding which windows to discard
+after seeing the numbers would be post-hoc selection.
 
 **4 of 300 windows were excluded** — two for latency p95/p50 > 1.50 (contention),
 two for energy sample coverage below 0.95. None fall in the primary reporting
@@ -337,8 +382,10 @@ the rest near 15.4 W — and the regime tracks *when* a model was measured, not
 which model it was, consistent with macOS scheduling threads onto efficiency
 versus performance cores. ResNet-50 and MobileNetV3-Small were measured almost
 entirely in the low-power regime (26/30 and 27/30 windows); the other three
-entirely in the high-power one. Latency moved with it: ResNet-50 fp32 at 4
-threads measured 5.25 ms at 16 W and 7.9 ms at 4.8 W. The rows are real
+entirely in the high-power one. Latency moved with it: for ResNet-50 fp32 at 4 threads,
+one window measured 5.25 ms p95 at 16.0 W against four windows averaging 8.0 ms
+at 4.9 W — note that the high-power side here is a single window, so treat it as
+an illustration of the regime split rather than an estimate of its size. The rows are real
 measurements, but of two different machine configurations, so they are shipped
 characterised (`thread_regime_confound` in `results/summary.json`) rather than
 compared. The 1-thread rows show no such split (minority regime 0.7% of windows),

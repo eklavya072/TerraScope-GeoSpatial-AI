@@ -1,9 +1,24 @@
 # Measurement protocol
 
 The rejection criteria and the statistical rules below were committed **before**
-any Phase 5 measurement was taken (commit `000d902`, which precedes every
-commit carrying results). The commit ordering is the evidence; check it against
-the first row of `results/bench.jsonl`.
+any Phase 5 measurement was taken. The commit ordering is the evidence, and it
+is checkable in one command:
+
+```bash
+git log --oneline --reverse bd06ff5..1c9fa33   # pre-registration -> first measurements
+```
+
+`bd06ff5` (26 Aug 2026, "Pre-register measurement exclusion criteria before
+Phase 5") introduced `bench/exclusion.py` and this file. `1c9fa33` (2 Sep 2026)
+is the first commit carrying `results/bench.jsonl`, which holds every
+measurement window these criteria judge. Seven days separate them.
+
+To be exact about what does *not* predate the pre-registration: `results/runs.jsonl`
+was created two hours earlier, in `8021cde`, holding one training row
+(ResNet-50 seed 0). That file records training accuracy from checkpoints, not
+measurement windows, and none of the criteria here apply to it. The claim being
+made is narrow and is exactly the one that matters: **no energy or latency
+window had been measured when the thresholds that judge them were fixed.**
 
 This file describes what was **actually done**, and states every deviation from
 the original pre-registration explicitly. A protocol document that describes an

@@ -110,3 +110,45 @@ def test_multithread_confound_is_characterised(summary):
     assert regimes["t4"]["bimodal"] is True
     assert regimes["t1"]["bimodal"] is False, \
         "the 1-thread rows carry the headline figures and must be single-regime"
+
+
+def test_regime_note_agrees_with_the_bimodal_flag(summary):
+    """REGRESSION: the note was gated on the mere existence of a minority regime
+    rather than on the bimodal threshold, so the 1-thread entry -- which carries
+    every headline figure -- declared itself "confounded" while its own flag said
+    otherwise. summary.json is the CC-BY-4.0 artefact deposited under the DOI, so
+    a machine-readable contradiction there is worse than a prose typo.
+    """
+    for threads, regime in summary["thread_regime_confound"].items():
+        confounded_note = "confounded" in regime["note"]
+        assert confounded_note == regime["bimodal"], (
+            f"{threads}: bimodal={regime['bimodal']} but note says "
+            f"{'confounded' if confounded_note else 'clean'}")
+
+
+def test_headline_thread_count_is_single_regime(summary):
+    t1 = summary["thread_regime_confound"]["t1"]
+    assert t1["bimodal"] is False
+    assert "no core-placement confound" in t1["note"]
+
+
+def test_energy_is_not_merely_latency_rescaled(bench_rows):
+    """Pins the power/latency decomposition the README reports.
+
+    If package power were constant, the energy column would carry no information
+    beyond latency. It is not constant, and the README says so with numbers;
+    this keeps those numbers honest.
+    """
+    import statistics as st
+    sel = [r for r in bench_rows
+           if r["threads_intra_op"] == 1 and r["batch_size"] == 1]
+    powers = [r["energy_mean_power_w"] for r in sel]
+    assert max(powers) / min(powers) > 2.0, "power varies more than 2x at 1 thread"
+
+    by_prec = {}
+    for prec in ("fp32", "int8_static"):
+        vals = [r["energy_mean_power_w"] for r in sel if r["precision"] == prec]
+        by_prec[prec] = st.mean(vals)
+    assert by_prec["int8_static"] > by_prec["fp32"], (
+        "int8-static draws MORE package power than fp32; if this inverts, the "
+        "README's central caveat about quantisation is wrong")

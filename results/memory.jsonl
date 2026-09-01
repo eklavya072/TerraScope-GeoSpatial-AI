@@ -1,0 +1,15 @@
+{"baseline_bytes": 46071808, "isolated_process": true, "kind": "memory", "model": "resnet50", "model_bytes": 161923072, "onnx_bytes": 94032201, "peak_bytes": 207994880, "precision": "fp32", "seed": 0}
+{"baseline_bytes": 45301760, "isolated_process": true, "kind": "memory", "model": "resnet50", "model_bytes": 39256064, "onnx_bytes": 23692785, "peak_bytes": 84557824, "precision": "int8_dynamic", "seed": 0}
+{"baseline_bytes": 45711360, "isolated_process": true, "kind": "memory", "model": "resnet50", "model_bytes": 66732032, "onnx_bytes": 24035678, "peak_bytes": 112443392, "precision": "int8_static", "seed": 0}
+{"baseline_bytes": 45449216, "isolated_process": true, "kind": "memory", "model": "mobilenetv3_small", "model_bytes": 18333696, "onnx_bytes": 6119727, "peak_bytes": 63782912, "precision": "fp32", "seed": 0}
+{"baseline_bytes": 45531136, "isolated_process": true, "kind": "memory", "model": "mobilenetv3_small", "model_bytes": 14303232, "onnx_bytes": 1690277, "peak_bytes": 59834368, "precision": "int8_dynamic", "seed": 0}
+{"baseline_bytes": 45465600, "isolated_process": true, "kind": "memory", "model": "mobilenetv3_small", "model_bytes": 19202048, "onnx_bytes": 1864284, "peak_bytes": 64667648, "precision": "int8_static", "seed": 0}
+{"baseline_bytes": 46284800, "isolated_process": true, "kind": "memory", "model": "mobilenetv3_large", "model_bytes": 34603008, "onnx_bytes": 16846529, "peak_bytes": 80887808, "precision": "fp32", "seed": 0}
+{"baseline_bytes": 45498368, "isolated_process": true, "kind": "memory", "model": "mobilenetv3_large", "model_bytes": 18989056, "onnx_bytes": 4419962, "peak_bytes": 64487424, "precision": "int8_dynamic", "seed": 0}
+{"baseline_bytes": 45547520, "isolated_process": true, "kind": "memory", "model": "mobilenetv3_large", "model_bytes": 21364736, "onnx_bytes": 4705294, "peak_bytes": 66912256, "precision": "int8_static", "seed": 0}
+{"baseline_bytes": 45629440, "isolated_process": true, "kind": "memory", "model": "efficientnet_lite0", "model_bytes": 30834688, "onnx_bytes": 13487309, "peak_bytes": 76464128, "precision": "fp32", "seed": 0}
+{"baseline_bytes": 45580288, "isolated_process": true, "kind": "memory", "model": "efficientnet_lite0", "model_bytes": 19152896, "onnx_bytes": 3560121, "peak_bytes": 64733184, "precision": "int8_dynamic", "seed": 0}
+{"baseline_bytes": 45498368, "isolated_process": true, "kind": "memory", "model": "efficientnet_lite0", "model_bytes": 16973824, "onnx_bytes": 3808969, "peak_bytes": 62472192, "precision": "int8_static", "seed": 0}
+{"baseline_bytes": 46333952, "isolated_process": true, "kind": "memory", "model": "mobilevit_s", "model_bytes": 36782080, "onnx_bytes": 19957406, "peak_bytes": 83116032, "precision": "fp32", "seed": 0}
+{"baseline_bytes": 45498368, "isolated_process": true, "kind": "memory", "model": "mobilevit_s", "model_bytes": 30048256, "onnx_bytes": 5495663, "peak_bytes": 75546624, "precision": "int8_dynamic", "seed": 0}
+{"baseline_bytes": 45432832, "isolated_process": true, "kind": "memory", "model": "mobilevit_s", "model_bytes": 27770880, "onnx_bytes": 5820157, "peak_bytes": 73203712, "precision": "int8_static", "seed": 0}

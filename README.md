@@ -1,167 +1,365 @@
-# TerraScope — Geospatial AI Land Cover Classification
+# TerraScope — the accuracy–energy trade-off for land-cover classification on CPU-only hardware
 
-[![Python](https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/streamlit-1.28%2B-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![TensorFlow](https://img.shields.io/badge/tensorflow-2.16-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
-[![Model](https://img.shields.io/badge/model-ResNet50%20%2895.67%25%20acc%29-informational)](#model-details)
-[![License: MIT](https://img.shields.io/github/license/eklavya072/TerraScope-GeoSpatial-AI)](LICENSE)
-[![Last Commit](https://img.shields.io/github/last-commit/eklavya072/TerraScope-GeoSpatial-AI)](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/commits/master)
+[![License: MIT](https://img.shields.io/badge/code-MIT-blue)](LICENSE)
+[![Data: CC BY 4.0](https://img.shields.io/badge/results%20data-CC--BY--4.0-blue)](LICENSE-DATA)
+[![EuroSAT](https://img.shields.io/badge/dataset-EuroSAT%20(MIT)-green)](https://github.com/phelber/eurosat)
 
-**TerraScope** is a satellite image land cover classification system powered by a deep learning model. It provides an interactive web interface for uploading satellite imagery, running real-time AI inference, and visualizing classification confidence across 10 EuroSAT land cover classes.
+## The finding
 
----
+On EuroSAT, replacing ResNet-50 (fp32) with EfficientNet-Lite0 (int8, statically
+quantised) costs **0.67 percentage points of accuracy** — 98.12% ± 0.30 against
+97.45% ± 0.32 — while using **19× less energy per inference** (60.84 J against
+3.18 J per 1,000 images), running **28× faster** (12.24 ms against 0.43 ms p95)
+and occupying **25× less disk** (94.0 MB against 3.8 MB).
 
-## Features
+Accuracy differences between architectures are real but small — a 1.26 pp spread
+across five architectures, of which 8 of 10 pairwise comparisons survive
+Holm-Bonferroni correction — whereas energy spans a factor of 19. **On CPU-only
+hardware the deployment decision should therefore be made on energy and latency,
+not on accuracy.**
 
-### Upload & Classify
-Upload satellite or aerial imagery (PNG, JPG, JPEG, TIFF) and run inference against a fine-tuned ResNet50-based model. The app accepts images through a clean inline upload control and immediately makes them available for classification.
-
-<img width="696" height="725" alt="Screenshot 2026-06-30 at 2 17 59 AM" src="https://github.com/user-attachments/assets/e40c863c-b09f-44c1-98a2-dd6025b9c1de" />
-
-### Real-Time AI Predictions
-Once an image is uploaded, click **Run Classification** to invoke the model. The system processes the image and returns the predicted land cover class along with a confidence score.
-
-<img width="2938" height="1878" alt="image" src="https://github.com/user-attachments/assets/aafa194f-8b40-40c6-bef0-b037feeff9f3" />
-
-
-### Confidence Score Chart
-A horizontal bar chart displays the model's confidence for all 10 EuroSAT classes — AnnualCrop, Forest, HerbaceousVegetation, Highway, Industrial, Pasture, PermanentCrop, Residential, River, and SeaLake. This gives immediate insight into the model's reasoning and how decisively it classified the image.
-
-<img width="1068" height="1034" alt="image" src="https://github.com/user-attachments/assets/bdf1a581-7676-4064-ba25-44aa4b2811cd" />
-
-
-### Status Tracking
-The classification panel includes a real-time status indicator that transitions from IDLE → PROCESSING → COMPLETE, providing clear feedback on what the system is doing.
-
-### Model Evaluation
-The Charts section includes a model performance graph (training accuracy & loss curves) so users can assess the model's training history and generalization quality.
-
-<img width="3366" height="1886" alt="image" src="https://github.com/user-attachments/assets/cb5d845c-f73e-41e2-b2e4-173c0e71e080" />
-
-
-### Image Analysis Tools
-Analyze uploaded images beyond classification:
-- **RGB Color Histograms** — Per-channel intensity distributions
-- **Image Statistics** — Mean brightness, standard deviation, min/max values
-- **Edge Detection** — Visualize edges using standard algorithms
-- **Intensity Map** — Interactive Plotly-based intensity heatmap
-
-  
-<img width="2924" height="2024" alt="image" src="https://github.com/user-attachments/assets/679d2c4f-5380-41c5-a780-54748b5b5180" />
-
-
-<img width="2916" height="1876" alt="image" src="https://github.com/user-attachments/assets/51b1203b-50c0-4057-b59a-0297e30afb6b" />
-
-
-### TerraScope Class Reference
-The Classes page provides a browsable reference for all 10 EuroSAT categories, each with a description and representative sample image displayed in collapsible expanders.
-
-<img width="3396" height="1894" alt="image" src="https://github.com/user-attachments/assets/f478cb64-6884-4ec3-8a31-b333fa542085" />
-
+Every number in this repository comes from a run we executed on the hardware
+recorded below, against a split file committed to this repository. Energy is
+**estimated** from on-die power telemetry, not metered at the wall; see
+[Limitations](#limitations).
 
 ---
 
-## Tech Stack
+## Results
 
-| Layer        | Technology                              |
-|--------------|-----------------------------------------|
-| Frontend     | [Streamlit](https://streamlit.io)       |
-| Backend      | Python 3.9+                             |
-| Model        | ResNet50 fine-tuned on EuroSAT          |
-| Framework    | TensorFlow / Keras                      |
-| Charts       | Plotly, Matplotlib                      |
-| Styling      | Custom CSS, Material Symbols, Inter font|
+<!-- BEGIN:results_table -->
+### Results (ONNX Runtime CPU EP, intra-op threads=1, batch=1)
+
+Accuracy is the mean over 5 seeds with a Student-t 95% confidence interval. Energy figures are ESTIMATED from on-die power telemetry, not metered at the wall. CO2e assumes 481 gCO2e/kWh (world average grid carbon intensity, ~481 gCO2e/kWh).
+
+| Model | Precision | Params | Accuracy % (mean ± 95% CI) | p95 latency (ms) | Model RSS (MB) | Model (MB) | Energy/1k inf (J, estimated) | CO2e/1k inf (g, estimated) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| efficientnet_lite0 | fp32 | 3.38M | 97.61 ± 0.13 | 3.74 | 31 | 13.5 | 19.28 | 0.0026 |
+| efficientnet_lite0 | int8_dynamic | 3.38M | 63.44 ± 3.97 | 4.43 | 19 | 3.6 | 25.75 | 0.0034 |
+| efficientnet_lite0 | int8_static | 3.38M | 97.45 ± 0.32 | 0.43 | 17 | 3.8 | 3.18 | 0.0004 |
+| mobilenetv3_large | fp32 | 4.21M | 97.10 ± 0.17 | 2.73 | 35 | 16.8 | 14.46 | 0.0019 |
+| mobilenetv3_large | int8_dynamic | 4.21M | 70.47 ± 8.10 | 2.88 | 19 | 4.4 | 19.32 | 0.0026 |
+| mobilenetv3_large | int8_static | 4.21M | 91.10 ± 1.11 | 0.52 | 21 | 4.7 | 3.60 | 0.0005 |
+| mobilenetv3_small | fp32 | 1.53M | 97.19 ± 0.10 | 1.40 | 18 | 6.1 | 6.97 | 0.0009 |
+| mobilenetv3_small | int8_dynamic | 1.53M | 14.57 ± 2.95 | 1.54 | 14 | 1.7 | 8.02 | 0.0011 |
+| mobilenetv3_small | int8_static | 1.53M | 32.53 ± 10.40 | 0.32 | 19 | 1.9 | 1.72 | 0.0002 |
+| mobilevit_s | fp32 | 4.94M | 98.36 ± 0.44 | 4.46 | 37 | 20.0 | 26.31 | 0.0035 |
+| mobilevit_s | int8_dynamic | 4.94M | 58.41 ± 10.82 | 3.91 | 30 | 5.5 | 24.53 | 0.0033 |
+| mobilevit_s | int8_static | 4.94M | 49.50 ± 9.13 | 2.11 | 28 | 5.8 | 13.77 | 0.0018 |
+| resnet50 | fp32 | 23.53M | 98.12 ± 0.30 | 12.24 | 162 | 94.0 | 60.84 | 0.0081 |
+| resnet50 | int8_dynamic | 23.53M | 80.49 ± 8.15 | 5.36 | 39 | 23.7 | 27.08 | 0.0036 |
+| resnet50 | int8_static | 23.53M | 97.22 ± 0.38 | 2.49 | 67 | 24.0 | 14.39 | 0.0019 |
+<!-- END:results_table -->
+
+Both int8 columns matter. **Static quantisation is close to free for some
+architectures and catastrophic for others**, which means "quantise it for the
+edge" is not a safe default:
+
+<!-- BEGIN:quantisation -->
+### Accuracy cost of int8 quantisation
+
+Paired per-seed differences against each model's own fp32 export, mean with a Student-t 95% confidence interval. Negative means quantisation lost accuracy.
+
+| Model | Precision | fp32 % | int8 % | Δ (pp, mean ± 95% CI) |
+|---|---|---:|---:|---:|
+| efficientnet_lite0 | int8_dynamic | 97.61 | 63.44 | -34.17 ± 4.07 |
+| efficientnet_lite0 | int8_static | 97.61 | 97.45 | -0.16 ± 0.23 |
+| mobilenetv3_large | int8_dynamic | 97.10 | 70.47 | -26.63 ± 8.12 |
+| mobilenetv3_large | int8_static | 97.10 | 91.10 | -6.01 ± 1.08 |
+| mobilenetv3_small | int8_dynamic | 97.19 | 14.57 | -82.62 ± 2.92 |
+| mobilenetv3_small | int8_static | 97.19 | 32.53 | -64.66 ± 10.34 |
+| mobilevit_s | int8_dynamic | 98.36 | 58.41 | -39.94 ± 11.18 |
+| mobilevit_s | int8_static | 98.36 | 49.50 | -48.86 ± 9.28 |
+| resnet50 | int8_dynamic | 98.12 | 80.49 | -17.63 ± 7.89 |
+| resnet50 | int8_static | 98.12 | 97.22 | -0.90 ± 0.50 |
+<!-- END:quantisation -->
+
+EfficientNet-Lite0 loses **0.16 ± 0.23 pp** to static int8 — a confidence
+interval containing zero, so on this dataset its quantised form is statistically
+indistinguishable from its fp32 parent while using 6× less energy. ResNet-50
+loses 0.90 ± 0.50 pp. MobileNetV3-Small loses 64.66 pp and MobileViT-S 48.86 pp:
+post-training quantisation destroys them. We investigated this rather than
+reporting it blind — per-channel weights, min-max / percentile / entropy
+calibration, restricting quantisation to Conv/Gemm, excluding depthwise
+convolutions, signed and unsigned activations, and batch sizes 1 and 64 all fail
+to recover MobileNetV3-Small. Its hard-swish and squeeze-excite activation
+distributions are the textbook case that post-training quantisation cannot
+represent; recovering them requires quantisation-aware training, which is out of
+scope for a post-training benchmark.
+
+**int8 dynamic quantisation is strictly dominated** on this hardware — worse
+accuracy *and* worse energy than fp32 for every model in the zoo. It recomputes
+activation ranges on every call, and ONNX Runtime's dynamic path handles
+convolutions poorly. It is reported because a negative result that saves someone
+else the experiment is worth publishing.
+
+### Accuracy: which differences are real?
+
+<!-- BEGIN:significance -->
+### Which accuracy differences are statistically distinguishable?
+
+Welch's t-test over seeds, Holm-Bonferroni corrected across all pairwise comparisons (family-wise alpha = 0.05).
+
+| Comparison | Δ accuracy (pp) | p | Holm threshold | Distinguishable? |
+|---|---:|---:|---:|---|
+| efficientnet_lite0 vs mobilenetv3_small | +0.41 | 0.0001 | 0.0050 | **yes** |
+| mobilenetv3_large vs resnet50 | -1.01 | 0.0001 | 0.0056 | **yes** |
+| efficientnet_lite0 vs mobilenetv3_large | +0.50 | 0.0002 | 0.0063 | **yes** |
+| mobilenetv3_small vs resnet50 | -0.93 | 0.0005 | 0.0071 | **yes** |
+| mobilenetv3_large vs mobilevit_s | -1.25 | 0.0006 | 0.0083 | **yes** |
+| mobilenetv3_small vs mobilevit_s | -1.16 | 0.0014 | 0.0100 | **yes** |
+| efficientnet_lite0 vs resnet50 | -0.51 | 0.0063 | 0.0125 | **yes** |
+| efficientnet_lite0 vs mobilevit_s | -0.75 | 0.0073 | 0.0167 | **yes** |
+| mobilenetv3_large vs mobilenetv3_small | -0.09 | 0.2480 | 0.0250 | no |
+| mobilevit_s vs resnet50 | +0.24 | 0.2565 | 0.0500 | no |
+
+8 of 10 pairwise accuracy differences are statistically distinguishable after correction.
+<!-- END:significance -->
+
+Two cautions on reading that table. First, *statistically distinguishable* is not
+*operationally meaningful*: the entire spread from best to worst architecture is
+1.26 pp, and a difference can be reliable yet too small to justify any change in
+deployment. Second, the comparisons are between architectures under one fixed
+recipe and one fixed budget — a model that trains poorly here might do better
+with tuning it was deliberately not given.
+
+### Accuracy versus energy
+
+![Accuracy versus energy, with the Pareto frontier marked](results/pareto.png)
+
+The marked frontier is the true mathematical one, so it includes
+`mobilenetv3_small int8_static` purely because nothing is cheaper — at 32.5%
+accuracy that configuration is useless in practice. Restricted to configurations
+above 97% accuracy, the frontier is **EfficientNet-Lite0 int8_static** (97.45%,
+3.18 J/1k), then **ResNet-50 int8_static** (97.22%, 14.39 J/1k) is dominated by
+it, and **MobileViT-S fp32** (98.36%, 26.31 J/1k) buys the last 0.9 pp for 8.3×
+the energy.
+
+### Deployment recommendation
+
+For a CPU-only ministry server classifying Sentinel-2 RGB tiles, deploy
+**EfficientNet-Lite0 quantised to int8 with static calibration**. It costs 0.67 pp
+of accuracy against the strongest fp32 baseline we measured and 0.90 pp against
+the best model overall, in exchange for 19× less energy, 28× lower p95 latency,
+and a 3.8 MB artefact that fits comfortably in a constrained deployment. On a single
+thread it sustains roughly 2,300 images per second (0.43 ms p95), and its 17 MB
+resident footprint leaves the machine free for the rest of its work. If the last 0.9 pp of accuracy genuinely matters —
+which, given the dataset caveats below, should be argued rather than assumed —
+MobileViT-S in fp32 is the accuracy-optimal choice at 8.3× the energy. Do **not**
+deploy a quantised MobileNetV3 or MobileViT without quantisation-aware training:
+their post-training int8 accuracy is unusable.
 
 ---
 
-## Getting Started
-
-### Prerequisites
-
-- Python 3.9+
-- pip
-
-### Installation
+## Reproducing this
 
 ```bash
-# Clone the repository
-git clone https://github.com/eklavya072/TerraScope-GeoSpatial-AI.git
-cd TerraScope-GeoSpatial-AI
-
-# Install dependencies
-pip install -r requirements.txt
+make setup     # install the locked environment (uv + uv.lock)
+make data      # fetch EuroSAT, write data/eurosat_rgb/MANIFEST.sha256
+make split     # regenerate the committed split (verifies byte-identical)
+make train     # 5 architectures x 5 seeds under one recipe
+make export    # ONNX fp32 + int8 dynamic/static for all 25 checkpoints
+make bench     # latency, memory and energy matrix
+make report    # rebuild tables, Pareto figure, and this README's tables
 ```
 
-### Download the Model
+`make all` runs the whole pipeline. Training uses the GPU where one is available
+(MPS on this machine) purely to make the matrix tractable; **all benchmarking is
+CPU-only** and no reported figure depends on the training device.
 
-The pretrained model weights (`resnet50_eurosat_ft.h5`) and class index mapping (`class_indices.npy`) are included in the repository under `models/`. If you need to retrain from scratch, use the provided `train_resnet50.py` / `finetune_resnet50.py` scripts or the `Train_ResNet50_Colab.ipynb` notebook.
-
-### Run the App
+Energy measurement requires a privileged sampler running alongside the benchmark,
+because Apple Silicon exposes on-die power only to root:
 
 ```bash
-streamlit run app.py
+sudo ./scripts/energy_sampler.sh
 ```
 
-Open your browser to `http://localhost:8501` (or the URL shown in the terminal).
+Start it before `make bench` and leave it running. Without it the benchmark still
+records accuracy, latency and memory, and reports every energy column as null
+rather than substituting an estimate.
+
+### What makes this reproducible
+
+- **The split is committed.** EuroSAT ships no official train/test partition, so
+  every published EuroSAT figure is measured against folds the reader cannot see.
+  `splits/eurosat_split_seed42.csv` is generated deterministically from seed 42,
+  verified byte-identical across runs and `PYTHONHASHSEED` values, and referenced
+  by sha256 in every result row. Runs abort if it does not match its sidecar hash.
+- **The corpus is hashed.** `data/eurosat_rgb/MANIFEST.sha256` records a sha256
+  per tile, written from undecoded bytes so the files are byte-identical to
+  upstream.
+- **The recipe is hashed** into every result, so a silent change is detectable
+  after the fact.
+- **The environment is pinned**, `torch==2.9.1` and `onnxruntime==1.29.0` exactly,
+  because latency and energy are only comparable within a fixed runtime version.
+
+<!-- BEGIN:recipe -->
+Every architecture is trained under this identical recipe. There is no
+supported way to give one model a tuned recipe of its own.
+
+| Setting | Value |
+|---|---|
+| augmentation | `['random_hflip', 'random_vflip', 'random_rot90']` |
+| batch_size | `128` |
+| early_stopping | `{'mode': 'max', 'monitor': 'val_acc', 'patience': 4, 'restore_best_weights': True}` |
+| finetune | `full` |
+| input_size | `64` |
+| label_smoothing | `0.1` |
+| lr | `0.0003` |
+| max_epochs | `20` |
+| norm_mean | `[0.485, 0.456, 0.406]` |
+| norm_std | `[0.229, 0.224, 0.225]` |
+| optimizer | `adamw` |
+| schedule | `cosine` |
+| warmup_epochs | `2` |
+| weight_decay | `0.0001` |
+<!-- END:recipe -->
 
 ---
 
-## Usage
+## Hardware and measurement conditions
 
-1. **Upload an image** — Click the `+` button or drag a file into the upload area on the Home page.
-2. **Preview** — The uploaded image appears in the Image Preview panel.
-3. **Classify** — Click the **Run Classification** button.
-4. **Review results** — The predicted class, confidence score, and a full confidence bar chart are displayed.
-5. **Explore** — Switch to the Charts tab for model evaluation metrics and advanced image analysis tools.
+<!-- BEGIN:hardware -->
+All measurements in this repository come from ONE machine. Latency,
+memory and energy figures are properties of the model AND this hardware;
+they are not portable claims.
+
+| Property | Value |
+|---|---|
+| CPU | Apple M2 |
+| Cores | 8 physical / 8 logical |
+| RAM | 8 GiB |
+| OS | Darwin 23.6.0 (Darwin Kernel Version 23.6.0) |
+| Python | 3.12.11 |
+| PyTorch | 2.9.1 |
+| ONNX Runtime | 1.29.0 |
+| timm | 1.0.28 |
+| NumPy | 2.5.2 |
+| Run date (UTC) | 2026-08-27T01:52:08+00:00 |
+| Power source during measurement | battery |
+| macOS Low Power Mode | 0 (AC) |
+
+Split file: `splits/eurosat_split_seed42.csv`  
+Split sha256: `b77443792ba4b11439ed220b3dea699ce61e48e0a0af49c51fb6a8cf43b0595d`  
+Recipe hash: `746abf440ef1`
+
+Inference is measured through ONNX Runtime's **CPU execution provider only**.
+Apple's GPU (MPS) and CoreML providers are excluded deliberately, not merely
+left unused: the question is what CPU-only hardware achieves. Training used
+the GPU, which affects no reported figure -- training cost is not part of the
+deployment claim being made.
+<!-- END:hardware -->
+
+Measurement discipline: thread counts are pinned in both the ONNX Runtime session
+and the environment (`OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS`,
+`VECLIB_MAXIMUM_THREADS`) — BLAS pools ignore the session setting, and unpinned
+thread counts are the most common reason CPU latency fails to reproduce. 50
+warm-up inferences are discarded before timing; each configuration is then timed
+for at least 1,000 runs *and* at least 20 seconds, and reported as p50/p95/p99
+with variance. The whole matrix ran in one session on AC power with Low Power
+Mode disabled; `powermetrics` recorded no thermal warning for the duration.
+
+The primary configuration is **1 intra-op thread**, which is both the
+reproducible one and what a shared multi-tenant server realistically grants a
+single inference process. 4-thread rows are also recorded. A notable result
+there: for MobileNetV3-Small, 4 threads is 2.2× faster but uses ~47% *more*
+energy per inference — parallel speed-up is not free.
 
 ---
 
-## Project Structure
+## Limitations
+
+- **Single hardware platform.** One Apple M2. Latency and energy rankings may
+  differ on x86, on server-class CPUs with AVX-512, or under different memory
+  bandwidth. This is the limitation most likely to change a conclusion.
+- **Energy is estimated, not metered.** Figures come from Apple Silicon's on-die
+  CPU package power telemetry, sampled at 200 ms and integrated over each timed
+  window. This excludes DRAM, display and PSU losses and is not a wall-socket
+  measurement. `codecarbon` cannot serve as an independent check here: it reads
+  Intel RAPL, which Apple Silicon lacks, so it degrades to a hardcoded-TDP model
+  whose output is a linear function of runtime — that would be latency wearing a
+  different unit, so it is not reported.
+- **CO₂e rests entirely on a stated assumption.** Carbon scales linearly with
+  assumed grid intensity (481 gCO₂e/kWh here, world average). National grids
+  range from under 50 to over 700, a ~15× spread. Substitute your own.
+- **EuroSAT is near-saturated**, so architecture differences are small in
+  absolute terms even when statistically reliable. Accuracy is a weak
+  discriminator on this dataset; that is itself the finding.
+- **Geographic bias.** EuroSAT covers 34 European countries. Nothing here
+  supports a claim about performance elsewhere; land cover, agriculture,
+  settlement morphology and phenology all differ.
+- **No scene-level split control.** EuroSAT tiles are cut from larger Sentinel-2
+  scenes, and the corpus as redistributed carries no scene identifier. Spatially
+  adjacent tiles may therefore span folds, which inflates all accuracies here
+  relative to true generalisation to unseen geography. Every model is affected
+  equally, so comparisons remain valid, but the absolute numbers should not be
+  read as geographic generalisation.
+- **RGB only.** EuroSAT's 13-band multispectral form is not benchmarked.
+- **One preprocessing convention.** The fairness rule requires identical
+  preprocessing, so all five models use ImageNet channel statistics. Four report
+  exactly those in their pretraining config; MobileViT's expects raw [0,1]
+  inputs, so its numbers carry a caveat the others do not.
+- **Early stopping interacts with fast convergence.** MobileViT-S reaches ~98%
+  validation accuracy within one epoch; on two of five seeds the patience-4 rule
+  fired at epochs 6 and 7. The rule is identical for every model, so the
+  comparison is fair, but it explains MobileViT-S's wider confidence interval.
+- **Training-time figures mix power regimes.** ResNet-50 seed 0 trained under
+  Low Power Mode on battery; the rest did not. Accuracy is unaffected — it comes
+  from checkpoints — but `train_seconds` in `results/runs.jsonl` is not
+  comparable across rows. No benchmark figure depends on it.
+
+---
+
+## Attribution and licences
+
+Code is MIT ([LICENSE](LICENSE)). Results data and the split file are CC-BY-4.0
+([LICENSE-DATA](LICENSE-DATA)). A [datasheet](DATASHEET.md) following *Datasheets
+for Datasets* (Gebru et al.) documents the split and results artefacts.
+
+**EuroSAT** is distributed under the MIT licence. Cite:
+
+> Helber, P., Bischke, B., Dengel, A., & Borth, D. *EuroSAT: A Novel Dataset and
+> Deep Learning Benchmark for Land Use and Land Cover Classification.*
+
+**Sentinel-2 / Copernicus.** EuroSAT is derived from Copernicus Sentinel-2
+imagery. Copernicus data is provided under terms granting free access, including
+reproduction, distribution and modification.
+
+**ESA WorldCover** is *not* used in this project, so its attribution string is
+deliberately omitted rather than included for completeness — printing an
+attribution for data one has not used is a false provenance claim.
+
+---
+
+## Architecture
 
 ```
-├── .streamlit/
-│   └── config.toml           # Streamlit server configuration
-├── assets/                   # Static images (class samples, satellite banner, model perf chart)
-├── models/                   # Trained model weights and class indices
-│   ├── resnet50_eurosat.h5      # ResNet50, frozen backbone (head-only training)
-│   ├── resnet50_eurosat_ft.h5   # ResNet50, fine-tuned (served model)
-│   └── class_indices.npy
-├── app.py                    # Main Streamlit application entry point
-├── config.py                 # Class names, model & data configuration
-├── model_handler.py          # TensorFlow model loading and inference
-├── visualizer.py             # Plotly/Matplotlib chart generation
-├── train_resnet50.py         # ResNet50 training script (frozen backbone)
-├── finetune_resnet50.py      # ResNet50 fine-tuning script (unfreezes last stage)
-├── Train_ResNet50_Colab.ipynb # Google Colab training notebook
-└── requirements.txt          # Python dependencies
+bench/                  the benchmark
+  config.py             zoo, shared recipe, normalisation, grid intensity  (single source of truth)
+  data.py               split-driven loading; the ONLY way to obtain a fold
+  models.py             one construction path, so no architecture gets special treatment
+  train.py              one (model, seed) under the shared recipe -> results/runs.jsonl
+  export_onnx.py        ONNX fp32 + int8 dynamic/static, calibrated from the train fold only
+  benchmark.py          CPU-only latency/accuracy/energy matrix -> results/bench.jsonl
+  power.py              powermetrics parsing and energy integration
+  stats.py              Student-t CIs, Welch tests, Holm correction, Pareto frontier
+  report.py             aggregation -> summary.json, tables, Pareto figure
+scripts/
+  prepare_data.py       materialise EuroSAT with original bytes + sha256 manifest
+  make_split.py         deterministic stratified split (the reproducibility anchor)
+  measure_memory.py     model-attributable RSS in isolated subprocesses
+  energy_sampler.sh     privileged powermetrics sampler
+  render_readme.py      inject measured tables into this README
+splits/                 the committed split, its metadata and its hash
+results/                runs.jsonl, bench.jsonl, memory.jsonl, summary.json, figures
 ```
 
----
-
-## Model Details
-
-- **Architecture**: ResNet50 (pretrained on ImageNet, fine-tuned on EuroSAT — last stage unfrozen)
-- **Input shape**: 64 × 64 × 3 (RGB)
-- **Output**: 10 EuroSAT land cover classes
-- **Training data**: [EuroSAT](https://github.com/phelber/eurosat) dataset (Sentinel-2 satellite imagery)
-- **Performance**: 95.67% test accuracy after fine-tuning
-
----
-
-## Configuration
-
-Edit `config.py` to adjust:
-
-- `CLASS_NAMES` — Class label mappings
-- `MODEL_CONFIG` — Model path and input shape
-- `DATA_CONFIG` — Allowed upload formats and max image dimensions
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-**Repository**: [eklavya072/TerraScope-GeoSpatial-AI](https://github.com/eklavya072/TerraScope-GeoSpatial-AI)
+The repository also contains a Streamlit demo app (`app.py`, `model_handler.py`,
+`visualizer.py`) from the project's earlier life as a single-model demo. It is
+unrelated to the benchmark, keeps its own dependencies in `requirements-app.txt`,
+and deliberately shares no environment with it so that TensorFlow never loads
+inside a measured run. Its previously reported figure — 95.67% for a fine-tuned
+ResNet-50 — was independently verified during this work, but it was measured on a
+third-party split whose training fold overlaps 1,949 of the 2,700 tiles in this
+benchmark's test fold, so it is not comparable to anything reported here and is
+not carried forward.

@@ -28,6 +28,11 @@ def render_results_table() -> str:
     return open(path).read() if os.path.exists(path) else "_not yet measured_\n"
 
 
+def render_quantisation() -> str:
+    path = os.path.join("results", "quantisation.md")
+    return open(path).read() if os.path.exists(path) else "_not yet measured_\n"
+
+
 def render_significance() -> str:
     path = os.path.join("results", "significance.md")
     return open(path).read() if os.path.exists(path) else "_not yet measured_\n"
@@ -87,6 +92,7 @@ def main() -> int:
 
     blocks = {
         "results_table": render_results_table(),
+        "quantisation": render_quantisation(),
         "significance": render_significance(),
         "hardware": render_hardware(summary),
         "recipe": render_recipe(summary),

@@ -34,13 +34,19 @@ from bench import utils
 from bench.config import MODEL_ZOO, RESULTS_DIR, SPLIT_CSV
 from bench.data import EuroSATFold
 from bench.export_onnx import ONNX_DIR, PRECISIONS
-from bench.power import energy_joules, parse_log
+from bench.power import PowerLog
 
 BENCH_JSONL = os.path.join(RESULTS_DIR, "bench.jsonl")
 POWER_LOG = os.path.join(RESULTS_DIR, "power_log.txt")
 
 WARMUP = 50
 MIN_RUNS = 1000
+# powermetrics timestamps are quantised to whole seconds, so a measurement
+# window of a fraction of a second cannot be attributed energy accurately. Every
+# window is therefore extended to at least this long, which also tightens the
+# latency distribution for the fastest models (a 1000-run window for MobileNetV3
+# at 4 threads is under a second).
+MIN_WINDOW_SECONDS = 20.0
 BATCH_SIZES = (1, 32)
 # Single thread is the primary configuration: it is the reproducible one, and
 # it is what a shared multi-tenant ministry server realistically grants a
@@ -69,6 +75,15 @@ def time_inference(session, sample: np.ndarray, n_runs: int) -> dict:
     for _ in range(WARMUP):
         session.run(None, {"input": sample})
 
+    # Size the run count from the observed per-call cost so the timed window is
+    # long enough for energy attribution, never shorter than n_runs.
+    probe = time.perf_counter()
+    for _ in range(5):
+        session.run(None, {"input": sample})
+    per_call = (time.perf_counter() - probe) / 5
+    if per_call > 0:
+        n_runs = max(n_runs, int(MIN_WINDOW_SECONDS / per_call))
+
     proc = psutil.Process()
     rss_before = proc.memory_info().rss
     lat = np.empty(n_runs, dtype=np.float64)
@@ -96,7 +111,7 @@ def time_inference(session, sample: np.ndarray, n_runs: int) -> dict:
 
 
 def bench_one(name: str, seed: int, precision: str, x_test, y_test,
-              power_samples, split_sha: str, env: dict) -> list[dict]:
+              power: PowerLog, split_sha: str, env: dict) -> list[dict]:
     path = os.path.join(ONNX_DIR, f"{name}_seed{seed}_{precision}.onnx")
     if not os.path.exists(path):
         raise SystemExit(f"missing {path} -- run bench.export_onnx first")
@@ -111,11 +126,17 @@ def bench_one(name: str, seed: int, precision: str, x_test, y_test,
             sample = np.ascontiguousarray(x_test[:bs])
             n_runs = MIN_RUNS if bs == 1 else max(100, MIN_RUNS // bs)
             timing = time_inference(session, sample, n_runs)
-            energy = energy_joules(power_samples, timing["wall_start"],
-                                   timing["wall_end"])
+            # Re-reads the log before integrating: the sampler is appending
+            # while we measure, so the samples covering THIS window only exist
+            # on disk after the window closes.
+            energy = power.energy(timing["wall_start"], timing["wall_end"])
             per_inf = None
             if energy["joules"] is not None:
-                total_images = n_runs * bs
+                # n_timed_runs, NOT the requested n_runs: time_inference raises
+                # the count to fill the minimum energy window, and dividing by
+                # the pre-adaptation figure would inflate energy per inference
+                # by exactly that ratio.
+                total_images = timing["n_timed_runs"] * bs
                 per_inf = energy["joules"] / total_images
             rows.append({
                 "kind": "bench",
@@ -181,22 +202,23 @@ def main() -> int:
     x_test = np.stack([ds[i][0].numpy() for i in range(len(ds))])
     y_test = np.array([ds[i][1] for i in range(len(ds))])
 
-    power_samples = parse_log(args.power_log)
-    if not power_samples:
+    power = PowerLog(args.power_log)
+    if not power.samples:
         print(f"WARNING: no power samples in {args.power_log}. Latency and "
               f"accuracy will be recorded; energy columns will be null.\n"
               f"         Start the sampler first:  sudo ./scripts/energy_sampler.sh",
               flush=True)
     else:
-        print(f"power log: {len(power_samples)} samples spanning "
-              f"{(power_samples[-1][0]-power_samples[0][0])/60:.1f} min", flush=True)
+        print(f"power log: {len(power.samples)} samples spanning "
+              f"{(power.samples[-1][0]-power.samples[0][0])/60:.1f} min "
+              f"(will be re-read as measurements proceed)", flush=True)
 
     names = list(MODEL_ZOO) if args.model == "all" else args.model.split(",")
     for name in names:
         for seed in (int(s) for s in args.seeds.split(",")):
             for precision in args.precisions.split(","):
                 for row in bench_one(name, seed, precision, x_test, y_test,
-                                     power_samples, split_sha, env):
+                                     power, split_sha, env):
                     utils.append_jsonl(BENCH_JSONL, row)
     return 0
 

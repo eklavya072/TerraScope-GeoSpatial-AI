@@ -129,3 +129,73 @@ def test_every_readme_percentage_claim_is_plausible(readme):
     """Cheap guard against a decimal-point slip: no accuracy claim above 100%."""
     for match in re.finditer(r"(\d{2,3}\.\d{2})%", readme):
         assert float(match.group(1)) <= 100.0
+
+
+# --------------------------------------------------------------------------
+# The energy-vs-latency section. Its whole point is that the energy axis is
+# mostly latency, stated with numbers -- so the numbers have to be on ONE basis.
+# They were not: the latency row printed config-mean endpoints (0.285 -> 12.006)
+# beside a per-window ratio (48.8x, which is 12.239/0.251), while the energy,
+# power and correlation figures were all per-window. A table that silently mixes
+# bases is the failure mode this whole section exists to argue against.
+# --------------------------------------------------------------------------
+
+def _t1b1(bench_rows):
+    return [r for r in bench_rows
+            if r["threads_intra_op"] == 1 and r["batch_size"] == 1]
+
+
+def test_energy_latency_table_is_per_window_throughout(readme, bench_rows):
+    rows = _t1b1(bench_rows)
+    assert len(rows) == 75
+    for field, low, high, ratio in (
+            ("latency_ms_p50", "0.251", "12.239", "48.8"),
+            ("energy_joules_per_1k_inferences", "1.56", "63.12", "40.5"),
+            ("energy_mean_power_w", "4.86", "10.24", "2.1")):
+        vals = [r[field] for r in rows]
+        digits = len(low.split(".")[1])
+        assert f"{min(vals):.{digits}f}" == low, f"{field} min drifted"
+        assert f"{max(vals):.{digits}f}" == high, f"{field} max drifted"
+        assert f"{max(vals) / min(vals):.1f}" == ratio, (
+            f"{field} ratio must be computed on the SAME rows as its endpoints")
+        assert f"{low} → {high}" in readme
+        assert f"{ratio}×" in readme
+
+
+def test_energy_latency_correlation_claim(readme, bench_rows):
+    import numpy as np
+    rows = _t1b1(bench_rows)
+    r = np.corrcoef([x["latency_ms_p50"] for x in rows],
+                    [x["energy_joules_per_1k_inferences"] for x in rows])[0, 1]
+    assert f"r = {r:.3f}" in readme, f"measured r is {r:.4f}"
+
+
+def test_power_by_precision_claim(readme, bench_rows):
+    """The second-order term the section rests on: int8-static draws MORE power."""
+    rows = _t1b1(bench_rows)
+    mean_w = {p: st.mean(x["energy_mean_power_w"] for x in rows
+                         if x["precision"] == p)
+              for p in ("fp32", "int8_dynamic", "int8_static")}
+    assert mean_w["int8_static"] > mean_w["fp32"], \
+        "the section claims quantised models draw more power"
+    for p in mean_w:
+        assert f"{mean_w[p]:.2f} W" in readme, f"{p} power figure drifted"
+    increase = (mean_w["int8_static"] / mean_w["fp32"] - 1) * 100
+    assert f"{increase:.0f}%" in readme
+
+
+def test_only_one_pair_reorders_between_latency_and_energy(readme, bench_rows):
+    """'It reorders one pair' -- asserted, because it is the section's evidence
+    that energy is not a pure restatement of latency."""
+    import collections
+    groups = collections.defaultdict(list)
+    for r in _t1b1(bench_rows):
+        groups[(r["model"], r["precision"])].append(r)
+    by = {k: (st.mean(x["latency_ms_p50"] for x in v),
+              st.mean(x["energy_joules_per_1k_inferences"] for x in v))
+          for k, v in groups.items()}
+    by_lat = [k for k in sorted(by, key=lambda k: by[k][0])]
+    by_energy = [k for k in sorted(by, key=lambda k: by[k][1])]
+    moved = [k for k, j in zip(by_lat, by_energy) if k != j]
+    assert len(moved) == 2, f"{len(moved)} positions differ, not one swapped pair"
+    assert "reorders one pair" in readme

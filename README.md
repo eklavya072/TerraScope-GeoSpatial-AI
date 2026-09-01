@@ -107,12 +107,13 @@ A fair objection, and worth answering with the data rather than deflecting.
 Energy per inference is power × time, so if package power were constant across
 configurations the energy axis would carry no information that latency does not.
 
-At a fixed thread count it is *mostly*, but not entirely, latency. Across the 15
-model × precision configurations at 1 thread, batch 1:
+At a fixed thread count it is *mostly*, but not entirely, latency. Across all 75
+measurement windows at 1 thread, batch 1 (15 model × precision configurations ×
+5 seeds):
 
 | Quantity | Range | Ratio |
 |---|---|---|
-| p50 latency | 0.285 → 12.006 ms | 48.8× |
+| p50 latency | 0.251 → 12.239 ms | 48.8× |
 | Energy per 1,000 inferences | 1.56 → 63.12 J | 40.5× |
 | Mean package power | 4.86 → 10.24 W | **2.1×** |
 

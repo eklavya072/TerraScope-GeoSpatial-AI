@@ -72,24 +72,31 @@ jobs:
           cd splits
           shasum -a 256 -c eurosat_split_seed42.csv.sha256
 
-      - name: Derived artefacts regenerate identically from the raw results
+      - name: Derived artefacts regenerate from the raw results
         # summary.json and the tables are DERIVED from results/bench.jsonl and
         # results/runs.jsonl. Regenerating them here means a hand-edited or
-        # corrupted summary.json fails CI -- previously only the README was
-        # checked, so drift between bench.jsonl and summary.json passed cleanly,
-        # which is the exact class of failure this job exists to catch.
+        # corrupted summary.json fails CI -- the drift this job exists to catch.
+        #
+        # check_derived.py rather than `git diff --exit-code`, because a
+        # byte-comparison cannot survive a change of platform: scipy's Welch
+        # p-values differ in the last ULP between macOS/arm64 and Linux/x86_64
+        # (0.0002170793405032607 vs ...606). Ten p-values differ that way and
+        # nothing else does. The script requires the PUBLISHED tables and README
+        # to be byte-identical -- they round to 4 decimals, so noise cannot reach
+        # them -- and summary.json to match structurally and within rel_tol=1e-9,
+        # which is six orders of magnitude tighter than any difference that could
+        # change a reported figure. tests/test_check_derived.py pins that the
+        # tolerance still catches a flipped significance flag, a crossed Holm
+        # threshold and a moved accuracy.
         #
         # pareto.png is excluded deliberately: matplotlib output is not
-        # byte-identical across platforms, so diffing it would fail on Linux for
-        # reasons unrelated to the data.
+        # byte-identical across platforms either.
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
           uv run python -m bench.report
           uv run python scripts/render_readme.py
-          git diff --exit-code -- README.md results/summary.json \
-            results/results_table.md results/significance.md \
-            results/quantisation.md
+          uv run python scripts/check_derived.py
 
       - name: Every module imports cleanly
         run: |

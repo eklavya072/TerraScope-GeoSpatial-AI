@@ -29,6 +29,15 @@ dependencies = [
 [tool.uv]
 package = false
 
+# uv locks only for the platforms it can see at resolution time. This project is
+# developed on macOS/arm64, so pointing Linux at the pytorch-cpu index below made
+# uv record only that index's aarch64 Linux wheel for torchvision -- and CI runs
+# on x86_64 Linux, where `uv sync --frozen` then refused to install anything.
+# Declaring the environment forces the lockfile to carry wheels for it as well.
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+
 # On Linux, PyPI's torch wheel pulls ~3GB of CUDA runtime packages that this
 # project never uses -- every measurement runs on the CPU execution provider by
 # design. Pointing Linux resolution at PyTorch's CPU index keeps CI installs

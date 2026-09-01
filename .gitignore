@@ -214,3 +214,7 @@ results/log_*.txt
 # energy integration; per-window joules are already in results/bench.jsonl.
 results/power_log.txt
 results/log_*.txt
+# Exported ONNX graphs: ~1.2GB for the full matrix, regenerable with
+# `make export` from the trained checkpoints. The recommended deployable model
+# is committed under models_release/ instead.
+results/onnx/

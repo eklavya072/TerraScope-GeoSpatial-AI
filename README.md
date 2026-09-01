@@ -260,7 +260,7 @@ uv sync --frozen --group dev
 uv run pytest tests/ -v
 ```
 
-49 tests, no GPU and no dataset download required — they run against the
+58 tests, no GPU and no dataset download required — they run against the
 committed split and the committed results, so CI verifies the artefacts that
 actually ship. Coverage is deliberately weighted towards the failures this
 project has actually had:
@@ -277,6 +277,9 @@ project has actually had:
 - **Results invariants** — one split hash and one recipe hash across every row,
   5 seeds per model, uniform measurement conditions (AC, Low Power Mode off, one
   ONNX Runtime version), and ONNX/PyTorch accuracy agreement on all 25 exports.
+- **Internal consistency of `summary.json`** — the machine-readable artefact
+  deposited under the DOI must not contradict itself, e.g. a regime note that
+  says "confounded" beside a flag that says clean.
 - **README claims** — every headline number is re-derived from `summary.json`
   and checked against the prose. This exists because a hand-typed sentence once
   claimed a 4-thread result that was wrong in both magnitude and direction while
@@ -482,7 +485,7 @@ scripts/
   measure_memory.py     model-attributable RSS in isolated subprocesses
   energy_sampler.sh     privileged powermetrics sampler
   render_readme.py      inject measured tables into this README
-tests/                  49 tests over the committed artefacts; no GPU or dataset needed
+tests/                  58 tests over the committed artefacts; no GPU or dataset needed
 .github/workflows/      CI: tests, split hash, README regenerability, imports
 splits/                 the committed split, its metadata and its hash
 results/                runs.jsonl, bench.jsonl, memory.jsonl, summary.json, tables, figure

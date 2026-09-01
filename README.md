@@ -251,6 +251,8 @@ project has actually had:
   after the fact.
 - **The environment is pinned**, `torch==2.9.1` and `onnxruntime==1.29.0` exactly,
   because latency and energy are only comparable within a fixed runtime version.
+  Linux resolves the same version from PyTorch's CPU index (`2.9.1+cpu`), which
+  avoids ~3 GB of CUDA runtime this CPU-only benchmark would never load.
 
 <!-- BEGIN:recipe -->
 Every architecture is trained under this identical recipe. There is no

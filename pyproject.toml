@@ -29,6 +29,19 @@ dependencies = [
 [tool.uv]
 package = false
 
+# On Linux, PyPI's torch wheel pulls ~3GB of CUDA runtime packages that this
+# project never uses -- every measurement runs on the CPU execution provider by
+# design. Pointing Linux resolution at PyTorch's CPU index keeps CI installs
+# small and fast. macOS resolution is untouched: its wheels carry no CUDA.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",

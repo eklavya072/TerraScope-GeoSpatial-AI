@@ -63,10 +63,15 @@ summary with and without them.
 - The full matrix ran in **one session**, 22:40–00:47, on AC power with macOS
   Low Power Mode disabled. `pmset` recorded no thermal warning. Power source and
   Low Power Mode state are recorded in every result row.
-- Each window is at least **1,000 inferences and at least 20 seconds**, after 50
-  discarded warm-up inferences. The 20 s floor exists because `powermetrics`
-  timestamps are quantised to whole seconds, so shorter windows cannot be
-  attributed energy accurately.
+- Each window covers at least **1,000 inferences** after 50 discarded warm-up
+  inferences, and **targets** 20 seconds. The 20 s target exists because
+  `powermetrics` timestamps are quantised to whole seconds, so shorter windows
+  cannot be attributed energy accurately.
+  Measured: batch-1 windows ran ≥1,666 calls, batch-32 windows ≥100 calls
+  (≥3,200 images). The run count is sized from a short probe of per-call cost,
+  so the target is not a hard floor — the shortest window achieved was **16.9 s**,
+  not 20 s. Windows are still well above the one-second timestamp quantum, and
+  every window's sample coverage is recorded and checked (`≥0.948` observed).
 - Thread counts pinned in the ORT session **and** in the environment
   (`OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS`,
   `VECLIB_MAXIMUM_THREADS`), because BLAS pools ignore the session setting.

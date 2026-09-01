@@ -1,5 +1,6 @@
 # TerraScope — the accuracy–energy trade-off for land-cover classification on CPU-only hardware
 
+[![CI](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/code-MIT-blue)](LICENSE)
 [![Data: CC BY 4.0](https://img.shields.io/badge/results%20data-CC--BY--4.0-blue)](LICENSE-DATA)
 [![EuroSAT](https://img.shields.io/badge/dataset-EuroSAT%20(MIT)-green)](https://github.com/phelber/eurosat)
@@ -50,6 +51,13 @@ Accuracy is the mean over 5 seeds with a Student-t 95% confidence interval. Ener
 | resnet50 | int8_dynamic | 23.53M | 80.49 ± 8.15 | 5.36 | 39 | 23.7 | 27.08 | 3.62 |
 | resnet50 | int8_static | 23.53M | 97.22 ± 0.38 | 2.49 | 67 | 24.0 | 14.39 | 1.92 |
 <!-- END:results_table -->
+
+**ONNX export is accuracy-neutral.** All 25 exported fp32 graphs reproduce their
+PyTorch checkpoint's test accuracy *exactly* — 25/25 identical, maximum
+difference 0.000000 pp. This matters because latency and energy are measured on
+the exported graph while accuracy is attributed to the model: if export drifted,
+every row would be describing two different models in the same line. It is
+asserted as a test (`tests/test_results_integrity.py`), not just observed once.
 
 Both int8 columns matter. **Static quantisation is close to free for some
 architectures and catastrophic for others**, which means "quantise it for the
@@ -200,6 +208,35 @@ Start it before `make bench` and leave it running. Without it the benchmark stil
 records accuracy, latency and memory, and reports every energy column as null
 rather than substituting an estimate.
 
+### Tests
+
+```bash
+uv sync --frozen --group dev
+uv run pytest tests/ -v
+```
+
+49 tests, no GPU and no dataset download required — they run against the
+committed split and the committed results, so CI verifies the artefacts that
+actually ship. Coverage is deliberately weighted towards the failures this
+project has actually had:
+
+- **Split integrity** — hash matches its sidecar, fold sizes, stratification
+  within 1% per class, and no tile in two folds.
+- **Energy integration** — three regression tests for real bugs: parsing the log
+  once while the sampler appends (would have nulled every energy figure),
+  integrating across second-quantised timestamps (returned exactly 0 J), and
+  partial trailing lines during a concurrent write.
+- **Statistics** — that `mean_ci` uses the t distribution rather than z (with
+  n=5 the difference is ~30% of the interval width), and that Holm correction
+  actually suppresses ten p=0.04 comparisons.
+- **Results invariants** — one split hash and one recipe hash across every row,
+  5 seeds per model, uniform measurement conditions (AC, Low Power Mode off, one
+  ONNX Runtime version), and ONNX/PyTorch accuracy agreement on all 25 exports.
+- **README claims** — every headline number is re-derived from `summary.json`
+  and checked against the prose. This exists because a hand-typed sentence once
+  claimed a 4-thread result that was wrong in both magnitude and direction while
+  the generated tables beside it were correct.
+
 ### What makes this reproducible
 
 - **The split is committed.** EuroSAT ships no official train/test partition, so
@@ -278,8 +315,11 @@ and the environment (`OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS
 `VECLIB_MAXIMUM_THREADS`) — BLAS pools ignore the session setting, and unpinned
 thread counts are the most common reason CPU latency fails to reproduce. 50
 warm-up inferences are discarded before timing; each configuration is then timed
-for at least 1,000 runs *and* at least 20 seconds, and reported as p50/p95/p99
-with variance. Timing reuses one fixed input tensor, so the input is resident in
+for at least 1,000 inferences (batch-1 windows ran ≥1,666 calls; batch-32
+windows ran ≥100 calls, so ≥3,200 images) and targets a 20-second window,
+reported as p50/p95/p99 with variance. The run count is sized from a short probe
+of per-call cost, which can undershoot when the probe overestimates it: the
+shortest window actually achieved was 16.9 s. Timing reuses one fixed input tensor, so the input is resident in
 cache: this isolates model compute from data-loading cost, which is the intent,
 but it means the figures are a lower bound on end-to-end serving latency, which
 would also carry decode and preprocessing. The whole matrix ran in one session on AC power with Low Power
@@ -393,6 +433,8 @@ scripts/
   measure_memory.py     model-attributable RSS in isolated subprocesses
   energy_sampler.sh     privileged powermetrics sampler
   render_readme.py      inject measured tables into this README
+tests/                  49 tests over the committed artefacts; no GPU or dataset needed
+.github/workflows/      CI: tests, split hash, README regenerability, imports
 splits/                 the committed split, its metadata and its hash
 results/                runs.jsonl, bench.jsonl, memory.jsonl, summary.json, tables, figure
 models_release/         the recommended deployable model (EfficientNet-Lite0 int8)

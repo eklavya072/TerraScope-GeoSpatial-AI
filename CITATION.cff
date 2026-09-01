@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, please cite it as below, and cite EuroSAT separately."
+title: "TerraScope: an accuracy-energy benchmark for land-cover classification on CPU-only hardware"
+type: software
+license: MIT
+repository-code: "https://github.com/eklavya072/TerraScope-GeoSpatial-AI"
+abstract: >-
+  A reproducible benchmark of the accuracy-energy trade-off for EuroSAT land-cover
+  classification on CPU-only hardware. Five architectures x five seeds under one
+  identical training recipe, exported to ONNX at fp32 and int8, measured for
+  accuracy (mean with 95% confidence intervals), latency, memory and energy
+  through ONNX Runtime's CPU execution provider against a committed,
+  hash-identified data split.
+keywords:
+  - remote sensing
+  - land cover classification
+  - EuroSAT
+  - benchmark
+  - energy efficiency
+  - quantization
+references:
+  - type: article
+    title: "EuroSAT: A Novel Dataset and Deep Learning Benchmark for Land Use and Land Cover Classification"
+    authors:
+      - family-names: Helber
+        given-names: Patrick
+      - family-names: Bischke
+        given-names: Benjamin
+      - family-names: Dengel
+        given-names: Andreas
+      - family-names: Borth
+        given-names: Damian

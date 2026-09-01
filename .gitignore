@@ -195,11 +195,10 @@ cython_debug/
 .pypirc
 
 # Model files
-models/*
-!models/.gitkeep
-!models/*.h5
-!models/*.npy
-!models/*.keras
+app/models/*
+!app/models/.gitkeep
+!app/models/*.h5
+!app/models/*.npy
 
 # --- benchmark artefacts -------------------------------------------------
 # The EuroSAT corpus is redownloaded by scripts/prepare_data.py; only its

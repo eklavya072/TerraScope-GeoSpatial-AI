@@ -19,8 +19,8 @@ CLASS_NAMES = {
 # Model configuration
 MODEL_CONFIG = {
     'input_shape': (64, 64, 3),
-    'model_path': 'models/resnet50_eurosat_ft.h5',
-    'indices_path': 'models/class_indices.npy'
+    'model_path': 'app/models/resnet50_eurosat_ft.h5',
+    'indices_path': 'app/models/class_indices.npy'
 }
 
 # Data processing configuration

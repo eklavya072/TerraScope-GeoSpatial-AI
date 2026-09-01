@@ -651,7 +651,7 @@ if st.session_state.page == "Home":
     </div>
     """, unsafe_allow_html=True)
 
-    sat_path = "assets/satellite.jpg"
+    sat_path = "app/assets/satellite.jpg"
     if os.path.exists(sat_path):
         with open(sat_path, "rb") as f:
             b64 = base64.b64encode(f.read()).decode()
@@ -814,8 +814,8 @@ elif st.session_state.page == "Charts":
     tab1, tab2 = st.tabs(["Model Evaluation", "Image Analysis"])
     with tab1:
         st.subheader("Model Performance")
-        if os.path.exists("assets/model_performance.jpg"):
-            st.image("assets/model_performance.jpg", caption="Training Progress Over Time", use_container_width=True)
+        if os.path.exists("app/assets/model_performance.jpg"):
+            st.image("app/assets/model_performance.jpg", caption="Training Progress Over Time", use_container_width=True)
 
     with tab2:
         st.subheader("Image Analysis")
@@ -855,16 +855,16 @@ elif st.session_state.page == "Classes":
     """, unsafe_allow_html=True)
 
     class_info = [
-        ("AnnualCrop", "Agricultural areas where crops are planted and harvested within a single year.", "assets/annualcrop.jpeg"),
-        ("Forest", "Areas dominated by trees, forming a continuous canopy.", "assets/forest.jpeg"),
-        ("HerbaceousVegetation", "Areas covered by non-woody plants and grasses.", "assets/herbaceous_vegetation.jpeg"),
-        ("Highway", "Major roads and transportation infrastructure.", "assets/highway.jpeg"),
-        ("Industrial", "Areas containing factories, warehouses, and industrial facilities.", "assets/industrial.jpeg"),
-        ("Pasture", "Land used for grazing livestock.", "assets/pasture.avif"),
-        ("PermanentCrop", "Agricultural areas with long-term crops like orchards and vineyards.", "assets/permanent_crop.jpeg"),
-        ("Residential", "Areas containing houses and residential buildings.", "assets/residential.png"),
-        ("River", "Natural watercourses and their immediate surroundings.", "assets/river.jpeg"),
-        ("SeaLake", "Large bodies of water including seas and lakes.", "assets/sealake.jpeg"),
+        ("AnnualCrop", "Agricultural areas where crops are planted and harvested within a single year.", "app/assets/annualcrop.jpeg"),
+        ("Forest", "Areas dominated by trees, forming a continuous canopy.", "app/assets/forest.jpeg"),
+        ("HerbaceousVegetation", "Areas covered by non-woody plants and grasses.", "app/assets/herbaceous_vegetation.jpeg"),
+        ("Highway", "Major roads and transportation infrastructure.", "app/assets/highway.jpeg"),
+        ("Industrial", "Areas containing factories, warehouses, and industrial facilities.", "app/assets/industrial.jpeg"),
+        ("Pasture", "Land used for grazing livestock.", "app/assets/pasture.avif"),
+        ("PermanentCrop", "Agricultural areas with long-term crops like orchards and vineyards.", "app/assets/permanent_crop.jpeg"),
+        ("Residential", "Areas containing houses and residential buildings.", "app/assets/residential.png"),
+        ("River", "Natural watercourses and their immediate surroundings.", "app/assets/river.jpeg"),
+        ("SeaLake", "Large bodies of water including seas and lakes.", "app/assets/sealake.jpeg"),
     ]
     
     cols = st.columns(2)

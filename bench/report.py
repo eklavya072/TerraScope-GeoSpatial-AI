@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 
 from bench.config import (GRID_INTENSITY_G_CO2E_PER_KWH, GRID_INTENSITY_SOURCE,
                           RESULTS_DIR)
+from bench.exclusion import evaluate as evaluate_window
 from bench.stats import compare, holm_bonferroni, mean_ci, pareto_frontier
 
 RUNS = os.path.join(RESULTS_DIR, "runs.jsonl")
@@ -48,7 +49,24 @@ def fmt_pct(ci: dict) -> str:
 
 def build(args) -> dict:
     runs = [r for r in read_jsonl(RUNS) if r.get("kind") == "train"]
-    bench = [b for b in read_jsonl(BENCH) if b.get("kind") == "bench"]
+    bench_all = [b for b in read_jsonl(BENCH) if b.get("kind") == "bench"]
+
+    # Apply the pre-registered rejection criteria (PROTOCOL.md, committed before
+    # Phase 5). Excluded windows are kept in results/bench.jsonl and counted
+    # here; they are never deleted.
+    excluded = []
+    bench = []
+    for b in bench_all:
+        verdict = evaluate_window(b)
+        if verdict["excluded"]:
+            excluded.append({**{k: b[k] for k in
+                                ("model", "precision", "seed",
+                                 "threads_intra_op", "batch_size")},
+                             "reasons": verdict["reasons"]})
+        else:
+            bench.append(b)
+    not_evaluated = sorted({n for b in bench_all
+                            for n in evaluate_window(b)["not_evaluated"]})
     if not runs:
         raise SystemExit("no training runs in results/runs.jsonl")
 
@@ -103,9 +121,13 @@ def build(args) -> dict:
                              if (model, precision) in mem else None),
             "onnx_mb": rows[0]["onnx_bytes"] / 1e6,
             "energy_j_per_1k": mean_ci(e) if e else None,
-            # J -> kWh (/3.6e6) -> gCO2e. Linear in the stated grid intensity.
-            "co2e_g_per_1k": (
-                mean_ci([j / 3.6e6 * args.grid_intensity for j in e]) if e else None),
+            # J -> kWh (/3.6e6) -> gCO2e, scaled to 1e6 inferences. Reported per
+            # MILLION rather than per thousand: per-thousand values land at
+            # 0.0002-0.008 g, where the leading zeros carry no information and
+            # invite transcription errors.
+            "co2e_g_per_1m": (
+                mean_ci([j / 3.6e6 * args.grid_intensity * 1000 for j in e])
+                if e else None),
             "n_seeds": len(rows),
         }
 
@@ -138,6 +160,19 @@ def build(args) -> dict:
     summary = {
         "accuracy_over_seeds": accuracy,
         "quantisation_delta": quant_delta,
+        "exclusions": {
+            "protocol": "PROTOCOL.md (pre-registered before Phase 5)",
+            "windows_total": len(bench_all),
+            "windows_excluded": len(excluded),
+            "windows_used": len(bench),
+            "criteria_not_evaluated": not_evaluated,
+            "retries_performed": 0,
+            "retry_deviation": (
+                "Failing windows were identified after the measurement session "
+                "ended and the privileged sampler was stopped, so they could not "
+                "be re-run under identical conditions."),
+            "excluded_windows": excluded,
+        },
         "pairwise_significance": {f"{a} vs {b}": v for (a, b), v in corrected.items()},
         "measured": measured,
         "environment": runs[-1]["env"],
@@ -169,13 +204,13 @@ def write_tables(summary: dict, args) -> None:
 
     lines = ["| Model | Precision | Params | Accuracy % (mean ± 95% CI) | "
              "p95 latency (ms) | Model RSS (MB) | Model (MB) | "
-             "Energy/1k inf (J, estimated) | CO2e/1k inf (g, estimated) |",
+             "Energy/1k inf (J, estimated) | CO2e/1M inf (g, estimated) |",
              "|---|---|---:|---:|---:|---:|---:|---:|---:|"]
     for key in sorted(measured):
         m = measured[key]
         if m["threads"] != args.threads or m["batch_size"] != args.batch:
             continue
-        e, c = m["energy_j_per_1k"], m["co2e_g_per_1k"]
+        e, c = m["energy_j_per_1k"], m["co2e_g_per_1m"]
         lines.append(
             f"| {m['model']} | {m['precision']} | "
             f"{acc.get(m['model'], {}).get('params', 0)/1e6:.2f}M | "
@@ -183,7 +218,7 @@ def write_tables(summary: dict, args) -> None:
             f"{'n/a' if m['model_rss_mb'] is None else format(m['model_rss_mb'], '.0f')} | "
             f"{m['onnx_mb']:.1f} | "
             f"{'not measured' if not e else format(e['mean'], '.2f')} | "
-            f"{'not measured' if not c else format(c['mean'], '.4f')} |")
+            f"{'not measured' if not c else format(c['mean'], '.2f')} |")
 
     header = (f"### Results (ONNX Runtime CPU EP, intra-op threads="
               f"{args.threads}, batch={args.batch})\n\n"

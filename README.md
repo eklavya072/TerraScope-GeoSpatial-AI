@@ -12,7 +12,7 @@ quantised) costs **0.67 percentage points of accuracy** — 98.12% ± 0.30 again
 3.18 J per 1,000 images), running **28× faster** (12.24 ms against 0.43 ms p95)
 and occupying **25× less disk** (94.0 MB against 3.8 MB).
 
-Accuracy differences between architectures are real but small — a 1.26 pp spread
+Accuracy differences between architectures are real but small — a 1.25 pp spread
 across five architectures, of which 8 of 10 pairwise comparisons survive
 Holm-Bonferroni correction — whereas energy spans a factor of 19. **On CPU-only
 hardware the deployment decision should therefore be made on energy and latency,
@@ -32,23 +32,23 @@ recorded below, against a split file committed to this repository. Energy is
 
 Accuracy is the mean over 5 seeds with a Student-t 95% confidence interval. Energy figures are ESTIMATED from on-die power telemetry, not metered at the wall. CO2e assumes 481 gCO2e/kWh (world average grid carbon intensity, ~481 gCO2e/kWh).
 
-| Model | Precision | Params | Accuracy % (mean ± 95% CI) | p95 latency (ms) | Model RSS (MB) | Model (MB) | Energy/1k inf (J, estimated) | CO2e/1k inf (g, estimated) |
+| Model | Precision | Params | Accuracy % (mean ± 95% CI) | p95 latency (ms) | Model RSS (MB) | Model (MB) | Energy/1k inf (J, estimated) | CO2e/1M inf (g, estimated) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| efficientnet_lite0 | fp32 | 3.38M | 97.61 ± 0.13 | 3.74 | 31 | 13.5 | 19.28 | 0.0026 |
-| efficientnet_lite0 | int8_dynamic | 3.38M | 63.44 ± 3.97 | 4.43 | 19 | 3.6 | 25.75 | 0.0034 |
-| efficientnet_lite0 | int8_static | 3.38M | 97.45 ± 0.32 | 0.43 | 17 | 3.8 | 3.18 | 0.0004 |
-| mobilenetv3_large | fp32 | 4.21M | 97.10 ± 0.17 | 2.73 | 35 | 16.8 | 14.46 | 0.0019 |
-| mobilenetv3_large | int8_dynamic | 4.21M | 70.47 ± 8.10 | 2.88 | 19 | 4.4 | 19.32 | 0.0026 |
-| mobilenetv3_large | int8_static | 4.21M | 91.10 ± 1.11 | 0.52 | 21 | 4.7 | 3.60 | 0.0005 |
-| mobilenetv3_small | fp32 | 1.53M | 97.19 ± 0.10 | 1.40 | 18 | 6.1 | 6.97 | 0.0009 |
-| mobilenetv3_small | int8_dynamic | 1.53M | 14.57 ± 2.95 | 1.54 | 14 | 1.7 | 8.02 | 0.0011 |
-| mobilenetv3_small | int8_static | 1.53M | 32.53 ± 10.40 | 0.32 | 19 | 1.9 | 1.72 | 0.0002 |
-| mobilevit_s | fp32 | 4.94M | 98.36 ± 0.44 | 4.46 | 37 | 20.0 | 26.31 | 0.0035 |
-| mobilevit_s | int8_dynamic | 4.94M | 58.41 ± 10.82 | 3.91 | 30 | 5.5 | 24.53 | 0.0033 |
-| mobilevit_s | int8_static | 4.94M | 49.50 ± 9.13 | 2.11 | 28 | 5.8 | 13.77 | 0.0018 |
-| resnet50 | fp32 | 23.53M | 98.12 ± 0.30 | 12.24 | 162 | 94.0 | 60.84 | 0.0081 |
-| resnet50 | int8_dynamic | 23.53M | 80.49 ± 8.15 | 5.36 | 39 | 23.7 | 27.08 | 0.0036 |
-| resnet50 | int8_static | 23.53M | 97.22 ± 0.38 | 2.49 | 67 | 24.0 | 14.39 | 0.0019 |
+| efficientnet_lite0 | fp32 | 3.38M | 97.61 ± 0.13 | 3.74 | 31 | 13.5 | 19.28 | 2.58 |
+| efficientnet_lite0 | int8_dynamic | 3.38M | 63.44 ± 3.97 | 4.43 | 19 | 3.6 | 25.75 | 3.44 |
+| efficientnet_lite0 | int8_static | 3.38M | 97.45 ± 0.32 | 0.43 | 17 | 3.8 | 3.18 | 0.42 |
+| mobilenetv3_large | fp32 | 4.21M | 97.10 ± 0.17 | 2.73 | 35 | 16.8 | 14.46 | 1.93 |
+| mobilenetv3_large | int8_dynamic | 4.21M | 70.47 ± 8.10 | 2.88 | 19 | 4.4 | 19.32 | 2.58 |
+| mobilenetv3_large | int8_static | 4.21M | 91.10 ± 1.11 | 0.52 | 21 | 4.7 | 3.60 | 0.48 |
+| mobilenetv3_small | fp32 | 1.53M | 97.19 ± 0.10 | 1.40 | 18 | 6.1 | 6.97 | 0.93 |
+| mobilenetv3_small | int8_dynamic | 1.53M | 14.57 ± 2.95 | 1.54 | 14 | 1.7 | 8.02 | 1.07 |
+| mobilenetv3_small | int8_static | 1.53M | 32.53 ± 10.40 | 0.32 | 19 | 1.9 | 1.72 | 0.23 |
+| mobilevit_s | fp32 | 4.94M | 98.36 ± 0.44 | 4.46 | 37 | 20.0 | 26.31 | 3.51 |
+| mobilevit_s | int8_dynamic | 4.94M | 58.41 ± 10.82 | 3.91 | 30 | 5.5 | 24.53 | 3.28 |
+| mobilevit_s | int8_static | 4.94M | 49.50 ± 9.13 | 2.11 | 28 | 5.8 | 13.77 | 1.84 |
+| resnet50 | fp32 | 23.53M | 98.12 ± 0.30 | 12.24 | 162 | 94.0 | 60.84 | 8.13 |
+| resnet50 | int8_dynamic | 23.53M | 80.49 ± 8.15 | 5.36 | 39 | 23.7 | 27.08 | 3.62 |
+| resnet50 | int8_static | 23.53M | 97.22 ± 0.38 | 2.49 | 67 | 24.0 | 14.39 | 1.92 |
 <!-- END:results_table -->
 
 Both int8 columns matter. **Static quantisation is close to free for some
@@ -118,7 +118,7 @@ Welch's t-test over seeds, Holm-Bonferroni corrected across all pairwise compari
 
 Two cautions on reading that table. First, *statistically distinguishable* is not
 *operationally meaningful*: the entire spread from best to worst architecture is
-1.26 pp, and a difference can be reliable yet too small to justify any change in
+1.25 pp, and a difference can be reliable yet too small to justify any change in
 deployment. Second, the comparisons are between architectures under one fixed
 recipe and one fixed budget — a model that trains poorly here might do better
 with tuning it was deliberately not given.
@@ -148,6 +148,28 @@ which, given the dataset caveats below, should be argued rather than assumed —
 MobileViT-S in fp32 is the accuracy-optimal choice at 8.3× the energy. Do **not**
 deploy a quantised MobileNetV3 or MobileViT without quantisation-aware training:
 their post-training int8 accuracy is unusable.
+
+### Measurement protocol and exclusions
+
+Rejection criteria for measurement windows were **committed before any
+measurement was taken** ([PROTOCOL.md](PROTOCOL.md), commit `000d902`, which
+precedes every commit carrying results). Deciding which windows to discard after
+seeing the numbers would be post-hoc selection.
+
+**4 of 300 windows were excluded** — two for latency p95/p50 > 1.50 (contention),
+two for energy sample coverage below 0.95. None fall in the primary reporting
+configuration, so no headline figure changes when they are removed; this was
+verified by recomputing the summary both ways. The excluded rows remain in
+`results/bench.jsonl` and are listed in `results/summary.json`; nothing is
+deleted. PROTOCOL.md also records five deviations from the original
+pre-registration, including two criteria that were never instrumented and the
+fact that failing windows were not re-run.
+
+Energy is reported **gross**, not baseline-subtracted. The idle baseline measured
+over 338 s immediately after the matrix was 0.036 W, which is 0.78% of the
+lowest-power measurement window and less for every other one — so baseline
+subtraction would move no figure by more than 0.78%, well inside the reported
+seed-to-seed variation.
 
 ---
 
@@ -342,6 +364,7 @@ bench/                  the benchmark
   export_onnx.py        ONNX fp32 + int8 dynamic/static, calibrated from the train fold only
   benchmark.py          CPU-only latency/accuracy/energy matrix -> results/bench.jsonl
   power.py              powermetrics parsing and energy integration
+  exclusion.py          pre-registered window rejection criteria (see PROTOCOL.md)
   stats.py              Student-t CIs, Welch tests, Holm correction, Pareto frontier
   report.py             aggregation -> summary.json, tables, Pareto figure
 scripts/
@@ -351,15 +374,19 @@ scripts/
   energy_sampler.sh     privileged powermetrics sampler
   render_readme.py      inject measured tables into this README
 splits/                 the committed split, its metadata and its hash
-results/                runs.jsonl, bench.jsonl, memory.jsonl, summary.json, figures
+results/                runs.jsonl, bench.jsonl, memory.jsonl, summary.json, tables, figure
+models_release/         the recommended deployable model (EfficientNet-Lite0 int8)
+app/                    legacy Streamlit demo, isolated from the benchmark (see app/README.md)
+PROTOCOL.md             measurement protocol, outcomes and deviations
+DATASHEET.md            Datasheets for Datasets (Gebru et al.)
 ```
 
-The repository also contains a Streamlit demo app (`app.py`, `model_handler.py`,
-`visualizer.py`) from the project's earlier life as a single-model demo. It is
-unrelated to the benchmark, keeps its own dependencies in `requirements-app.txt`,
-and deliberately shares no environment with it so that TensorFlow never loads
-inside a measured run. Its previously reported figure — 95.67% for a fine-tuned
-ResNet-50 — was independently verified during this work, but it was measured on a
-third-party split whose training fold overlaps 1,949 of the 2,700 tiles in this
-benchmark's test fold, so it is not comparable to anything reported here and is
-not carried forward.
+The repository also contains a Streamlit demo app under `app/`, from the
+project's earlier life as a single-model demo. It is unrelated to the benchmark,
+keeps its own dependencies, and deliberately shares no environment with it so
+that TensorFlow never loads inside a measured run. Its previously reported
+figure — 95.67% for a fine-tuned ResNet-50 — was independently verified during
+this work, but it was measured on a third-party split whose training fold
+overlaps 1,949 of the 2,700 tiles in this benchmark's test fold, so it is not
+comparable to anything reported here and is not carried forward. See
+[app/README.md](app/README.md).

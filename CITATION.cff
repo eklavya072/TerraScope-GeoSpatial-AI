@@ -2,6 +2,9 @@ cff-version: 1.2.0
 message: "If you use this benchmark, please cite it as below, and cite EuroSAT separately."
 title: "TerraScope: an accuracy-energy benchmark for land-cover classification on CPU-only hardware"
 type: software
+authors:
+  - family-names: Singh
+    given-names: Eklavya
 license: MIT
 repository-code: "https://github.com/eklavya072/TerraScope-GeoSpatial-AI"
 abstract: >-

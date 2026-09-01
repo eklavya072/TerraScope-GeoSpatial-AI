@@ -24,5 +24,10 @@
       "scheme": "url"
     }
   ],
-  "notes": "Source code is MIT licensed. The benchmark results data and the split definition (results/, splits/) are licensed CC-BY-4.0. The underlying EuroSAT imagery is MIT licensed by Helber et al. and is derived from Copernicus Sentinel-2 data."
+  "notes": "Source code is MIT licensed. The benchmark results data and the split definition (results/, splits/) are licensed CC-BY-4.0. The underlying EuroSAT imagery is MIT licensed by Helber et al. and is derived from Copernicus Sentinel-2 data.",
+  "creators": [
+    {
+      "name": "Singh, Eklavya"
+    }
+  ]
 }

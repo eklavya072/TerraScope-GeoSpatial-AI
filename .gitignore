@@ -209,3 +209,8 @@ data/cache/
 .venv-bench/
 results/checkpoints/
 results/log_*.txt
+# Raw powermetrics telemetry: ~250MB per session, exceeds GitHub's file limit.
+# results/power_summary.csv carries the per-second means needed to audit the
+# energy integration; per-window joules are already in results/bench.jsonl.
+results/power_log.txt
+results/log_*.txt

@@ -19,7 +19,8 @@ import pandas as pd
 import streamlit as st
 from PIL import Image
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "app"))
+APP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app")
+sys.path.insert(0, APP_DIR)
 
 import demo_data as dd  # noqa: E402
 
@@ -33,7 +34,10 @@ ACCURACY_SLIDER_STEP = 0.05            # percentage points
 LATENCY_SLIDER_STEP = 0.05             # milliseconds
 
 st.set_page_config(page_title="TerraScope — accuracy vs energy on CPU",
-                   page_icon="🛰️", layout="wide")
+                   layout="wide")
+
+with open(os.path.join(APP_DIR, "style.css")) as fh:
+    st.markdown(f"<style>{fh.read()}</style>", unsafe_allow_html=True)
 
 
 # ----------------------------------------------------------------- loading ---
@@ -66,6 +70,16 @@ def rows_at_report_config() -> list[dict]:
             and v["batch_size"] == dd.REPORT_BATCH]
 
 
+def card(label: str, title: str, body: str, muted: bool = False) -> None:
+    """Result card. Replaces Streamlit's stock success/error boxes."""
+    css = "ts-card ts-card-empty" if muted else "ts-card"
+    st.markdown(
+        f'<div class="{css}"><div class="ts-card-label">{label}</div>'
+        f'<div class="ts-card-title">{title}</div>'
+        f'<div class="ts-card-body">{body}</div></div>',
+        unsafe_allow_html=True)
+
+
 # ------------------------------------------------------------------ header ---
 
 def headline() -> str:
@@ -92,52 +106,41 @@ def headline() -> str:
     accs = [v["mean"] * 100 for v in summary["accuracy_over_seeds"].values()]
 
     return (
-        f"Across {len(summary['accuracy_over_seeds'])} architectures, accuracy "
-        f"spans **{max(accs) - min(accs):.2f} percentage points**. Among the "
-        f"{len(near_equal)} configurations within 1 pp of the best accuracy "
-        f"measured, **energy still spans {ratio:.0f}×** — "
-        f"`{cheapest['model']} {cheapest['precision']}` at "
-        f"**{cheapest['energy_j_per_1k']['mean']:.2f} J** per 1,000 inferences "
-        f"against `{dearest['model']} {dearest['precision']}` at "
-        f"**{dearest['energy_j_per_1k']['mean']:.2f} J**, for "
-        f"**{gap:.2f} pp** of accuracy. On CPU-only hardware the deployment "
-        f"decision belongs to energy and latency, not accuracy."
+        f"Across {len(summary['accuracy_over_seeds'])} architectures trained on "
+        f"identical terms, accuracy spans {max(accs) - min(accs):.2f} percentage "
+        f"points. Among the {len(near_equal)} configurations within a point of "
+        f"the best, <strong>energy still spans {ratio:.0f}×</strong> — "
+        f"{cheapest['model']} {cheapest['precision']} at "
+        f"{cheapest['energy_j_per_1k']['mean']:.2f} J per thousand inferences "
+        f"against {dearest['model']} {dearest['precision']} at "
+        f"{dearest['energy_j_per_1k']['mean']:.2f} J, for {gap:.2f} pp of "
+        f"accuracy. On CPU-only hardware the deployment decision belongs to "
+        f"energy and latency, not accuracy."
     )
 
 
-st.title("🛰️ TerraScope")
-st.markdown(headline())
+st.title("TerraScope")
+st.markdown(f'<p class="ts-lede">{headline()}</p>', unsafe_allow_html=True)
+st.markdown(
+    '<p class="ts-note">Latency is measured live on this server. Accuracy, '
+    'energy and CO₂e are looked up from the benchmark, measured on an Apple M2.'
+    '</p>', unsafe_allow_html=True)
 
-st.warning(
-    "**How to read every number here.** Latency is **measured live on this "
-    "server**, right now, as you click. Accuracy, energy and CO₂e are **looked "
-    "up from the committed benchmark**, measured on an Apple M2 — this container "
-    "has no power telemetry, so energy is never computed here. Accuracy comes "
-    "from a 5-seed run against a held-out split. Nothing on this page is an "
-    "estimate: anything unmeasured says *not measured*.",
-    icon="⚖️")
-
-race_tab, quant_tab, pareto_tab, receipts_tab = st.tabs(
-    ["① The race", "② Quantisation roulette", "③ Which should I deploy?",
-     "④ Receipts"])
+classify_tab, quant_tab, deploy_tab, method_tab = st.tabs(
+    ["Classify", "Quantisation", "Deploy", "Method"])
 
 
-# --------------------------------------------------------- ① the race -------
+# ------------------------------------------------------------- Classify -----
 
-with race_tab:
-    st.subheader("Classify a tile on every model at once")
-    st.caption("Every sample below is from the **held-out test fold** of the "
-               "committed split — no model here was trained on any of them.")
-
+with classify_tab:
     left, right = st.columns([1, 2])
 
     with left:
-        source = st.radio("Image source", ["Sample tile (test fold)", "Upload"],
-                          horizontal=False)
+        source = st.radio("Image source", ["Sample tile", "Upload"])
         image = None
         true_label = None
 
-        if source.startswith("Sample"):
+        if source == "Sample tile":
             tiles = samples.get("tiles", [])
             if tiles:
                 labels = [f"{t['true_label']} — {t['file']}" for t in tiles]
@@ -146,15 +149,14 @@ with race_tab:
                 chosen = tiles[pick]
                 true_label = chosen["true_label"]
                 image = Image.open(os.path.join(dd.SAMPLES_DIR, chosen["file"]))
+                st.caption("From the held-out test fold — no model here trained "
+                           "on it.")
             else:
-                st.info("No sample tiles bundled.")
+                st.caption("No sample tiles bundled.")
         else:
-            st.info("**Before you upload:** EuroSAT covers 34 European countries "
-                    "at 10 m resolution. A tile from another continent, another "
-                    "sensor, or a different scale is outside the distribution "
-                    "these models were trained on, and the prediction should not "
-                    "be trusted — the models will still return a confident "
-                    "answer, which is exactly the problem.", icon="🌍")
+            st.caption("EuroSAT covers 34 European countries at 10 m. A tile "
+                       "from elsewhere is out of distribution and the "
+                       "prediction should not be trusted.")
             upload = st.file_uploader("Satellite tile", type=["png", "jpg", "jpeg"])
             if upload:
                 image = Image.open(upload)
@@ -162,34 +164,25 @@ with race_tab:
         if image is not None:
             st.image(image, caption=(f"True class: {true_label}" if true_label
                                      else "Uploaded tile"), width=220)
-            if true_label:
-                st.caption("The true class is known because this tile comes from "
-                           "the labelled test fold.")
 
     with right:
-        default = [m for m in MODELS]
-        picked = st.multiselect(
-            "Models to race (all int8-static by default — watch what "
-            "quantisation does to some of them)", MODELS, default=default)
+        picked = st.multiselect("Models", MODELS, default=list(MODELS))
         precision = st.selectbox("Precision", dd.PRECISIONS,
                                  index=dd.PRECISIONS.index("int8_static"))
         volume = st.select_slider(
-            "Daily inference volume (for the CO₂e column)",
-            options=[10_000, 100_000, 1_000_000, 10_000_000],
-            value=1_000_000,
-            format_func=lambda v: f"{v:,}/day")
-
+            "Daily inference volume", options=[10_000, 100_000, 1_000_000,
+                                               10_000_000],
+            value=1_000_000, format_func=lambda v: f"{v:,}/day")
         run = st.button("Run classification", type="primary",
                         disabled=image is None or not picked)
 
     if run and image is not None:
         tensor = dd.preprocess(image)
         table = st.empty()
-        progress = st.progress(0.0)
         collected = []
 
-        for i, model in enumerate(picked, start=1):
-            with st.spinner(f"Running {model} ({precision})…"):
+        for model in picked:
+            with st.spinner(f"Running {model}…"):
                 pred = dd.classify_and_time(model, precision, tensor)
             row = dd.measured(summary, model, precision)
             co2 = dd.daily_co2e_grams(summary, model, precision, volume)
@@ -200,44 +193,35 @@ with race_tab:
             collected.append({
                 "Model": model,
                 "Predicted": pred.label,
-                "Correct": ("—" if not true_label
-                            else "✅" if pred.label == true_label else "❌"),
+                "Verdict": ("—" if not true_label
+                            else "correct" if pred.label == true_label
+                            else "wrong"),
                 "Confidence": f"{pred.confidence * 100:.1f}%",
-                "Latency (live, median)": f"{pred.latency_ms_median:.3f} ms",
+                "Latency, live": f"{pred.latency_ms_median:.3f} ms",
                 "Benchmark accuracy": ("not measured" if not acc
                                        else f"{acc[0]:.2f}%"),
-                "Energy /1k (M2)": f"{fmt(energy)} J",
+                "Energy /1k": f"{fmt(energy)} J",
                 f"CO₂e at {volume:,}/day": ("not measured" if co2 is None
                                             else f"{co2:.2f} g"),
             })
             table.dataframe(pd.DataFrame(collected), use_container_width=True,
                             hide_index=True)
-            progress.progress(i / len(picked))
 
-        progress.empty()
-        st.caption(f"Latency is the **median of {dd.TIMED_RUNS} runs measured on "
-                   f"this server** after {dd.WARMUP_RUNS} discarded warm-up runs, "
-                   f"at {dd.REPORT_THREADS} thread. It reflects this container's "
-                   f"CPU, not the benchmark hardware. Energy, CO₂e and accuracy "
-                   f"are looked up from the committed benchmark (Apple M2).")
+        st.caption(f"Latency: median of {dd.TIMED_RUNS} runs on this server, "
+                   f"after {dd.WARMUP_RUNS} warm-up runs discarded, at "
+                   f"{dd.REPORT_THREADS} thread.")
 
-        wrong = [c for c in collected if c["Correct"] == "❌"]
+        wrong = [c for c in collected if c["Verdict"] == "wrong"]
         if wrong and true_label:
-            st.error(
-                f"**{len(wrong)} of {len(collected)} models got this wrong** — "
-                f"{', '.join(c['Model'] for c in wrong)}. Confidently, and at "
-                f"full speed. Speed and confidence are not accuracy; see the "
-                f"next tab for what quantisation did to them.", icon="⚠️")
+            st.markdown(
+                f'<p class="ts-flag">{len(wrong)} of {len(collected)} models '
+                f'got this wrong — {", ".join(c["Model"] for c in wrong)} — '
+                f'confidently, and at full speed.</p>', unsafe_allow_html=True)
 
 
-# ------------------------------------------- ② quantisation roulette --------
+# --------------------------------------------------------- Quantisation -----
 
 with quant_tab:
-    st.subheader("What post-training quantisation costs")
-    st.caption("Shrinking a model to int8 is close to free for some "
-               "architectures and destroys others. All figures below are from "
-               "the committed 5-seed benchmark.")
-
     model = st.selectbox("Architecture", MODELS, key="quant_model")
     cols = st.columns(len(dd.PRECISIONS))
 
@@ -250,57 +234,45 @@ with quant_tab:
                 st.metric(prec, "not measured")
                 continue
             delta = None if prec == "fp32" or base is None else acc[0] - base[0]
-            st.metric(
-                prec,
-                f"{acc[0]:.2f}%",
-                None if delta is None else f"{delta:+.2f} pp vs fp32",
-                delta_color="normal")
-            st.caption(f"95% CI ± {fmt(acc[1])} pp")
+            st.metric(prec, f"{acc[0]:.2f}%",
+                      None if delta is None else f"{delta:+.2f} pp vs fp32",
+                      delta_color="normal")
+            detail = f"95% CI ± {fmt(acc[1])} pp"
             if row:
-                st.caption(f"{fmt(row['onnx_mb'])} MB on disk")
+                detail += f" · {fmt(row['onnx_mb'])} MB"
                 if row.get("energy_j_per_1k"):
-                    st.caption(f"{fmt(row['energy_j_per_1k']['mean'])} J / 1k")
+                    detail += f" · {fmt(row['energy_j_per_1k']['mean'])} J/1k"
+            st.caption(detail)
 
-    st.divider()
-    st.markdown("**Paired per-seed accuracy change against each model's own "
-                "fp32 export.** A confidence interval containing zero means the "
-                "change is not distinguishable from no change at all.")
-
-    qrows = []
+    # Markdown rather than st.dataframe: the grid collapses its columns to
+    # illegibility when a tab is rendered before its width is measured, and this
+    # table is small, static and read left-to-right.
+    lines = ["| Model | Precision | fp32 % | int8 % | Change (pp) | Verdict |",
+             "|---|---|---:|---:|---:|---|"]
     for m in MODELS:
         for prec in ("int8_dynamic", "int8_static"):
             d = dd.quantisation_delta(summary, m, prec)
             if not d:
                 continue
             half = d.get("delta_half_width")
-            qrows.append({
-                "Model": m,
-                "Precision": prec,
-                "fp32 %": f"{d['fp32_mean'] * 100:.2f}",
-                "int8 %": f"{d['quant_mean'] * 100:.2f}",
-                "Δ (pp)": f"{d['delta_mean'] * 100:+.2f}"
-                          + ("" if half is None else f" ± {half * 100:.2f}"),
-                "Verdict": ("indistinguishable from fp32"
-                            if half is not None
-                            and abs(d["delta_mean"]) < half else "real loss"),
-            })
-    st.dataframe(pd.DataFrame(qrows), use_container_width=True, hide_index=True)
-    st.caption("int8-dynamic is worse than fp32 on **both** accuracy and energy "
-               "for every model measured — it recomputes activation ranges on "
-               "every call. It is reported because a negative result saves "
-               "someone else the experiment.")
+            change = (f"{d['delta_mean'] * 100:+.2f}"
+                      + ("" if half is None else f" ± {half * 100:.2f}"))
+            verdict = ("indistinguishable from fp32"
+                       if half is not None and abs(d["delta_mean"]) < half
+                       else "real loss")
+            lines.append(f"| {m} | {prec} | {d['fp32_mean'] * 100:.2f} | "
+                         f"{d['quant_mean'] * 100:.2f} | {change} | {verdict} |")
+    st.markdown("\n".join(lines))
+    st.caption("Paired per-seed change against each model's own fp32 export; a "
+               "confidence interval spanning zero means no detectable change.")
 
 
-# ------------------------------------------------- ③ the Pareto picker ------
+# --------------------------------------------------------------- Deploy -----
 
-with pareto_tab:
-    st.subheader("Which configuration should I actually deploy?")
-
+with deploy_tab:
     rows = [r for r in rows_at_report_config() if r.get("energy_j_per_1k")]
     df = pd.DataFrame([{
         "config": f"{r['model']} {r['precision']}",
-        "model": r["model"],
-        "precision": r["precision"],
         "accuracy": r["test_acc"]["mean"] * 100,
         "energy": r["energy_j_per_1k"]["mean"],
         "p95": r["latency_p95_ms"]["mean"],
@@ -309,122 +281,132 @@ with pareto_tab:
 
     c1, c2 = st.columns(2)
     with c1:
-        min_acc = st.slider("Minimum accuracy (%)",
-                            float(df["accuracy"].min()),
+        min_acc = st.slider("Minimum accuracy (%)", float(df["accuracy"].min()),
                             float(df["accuracy"].max()),
                             float(df["accuracy"].median()),
                             step=ACCURACY_SLIDER_STEP)
     with c2:
-        max_p95 = st.slider("Maximum p95 latency (ms)",
-                            float(df["p95"].min()), float(df["p95"].max()),
-                            float(df["p95"].max()), step=LATENCY_SLIDER_STEP)
+        max_p95 = st.slider("Maximum p95 latency (ms)", float(df["p95"].min()),
+                            float(df["p95"].max()), float(df["p95"].max()),
+                            step=LATENCY_SLIDER_STEP)
 
     ok = df[(df["accuracy"] >= min_acc) & (df["p95"] <= max_p95)]
     if ok.empty:
-        st.error("No measured configuration satisfies both constraints. "
-                 "Loosen one — this is a real answer, not a failure.")
+        card("No candidate", "Nothing measured meets both constraints",
+             "Loosen one. This is a real answer about the measured set, not a "
+             "failure of the tool.", muted=True)
     else:
         best = ok.loc[ok["energy"].idxmin()]
-        st.success(
-            f"**{best['config']}** — {best['accuracy']:.2f}% accuracy, "
-            f"{best['energy']:.2f} J per 1,000 inferences, "
-            f"{best['p95']:.2f} ms p95, {best['size_mb']:.1f} MB. "
-            f"Lowest energy among {len(ok)} configuration(s) meeting your "
-            f"constraints.", icon="✅")
+        card("Lowest energy meeting your constraints",
+             best["config"],
+             f"{best['accuracy']:.2f}% accuracy · "
+             f"{best['energy']:.2f} J per thousand inferences · "
+             f"{best['p95']:.2f} ms p95 · {best['size_mb']:.1f} MB — "
+             f"chosen from {len(ok)} qualifying configuration(s).")
 
     frontier = dd.pareto_frontier(df.to_dict("records"))
-    chart_df = df.assign(selected=df["config"].isin(ok["config"]),
-                         on_frontier=df["config"].isin(frontier))
+    chart_df = df.assign(
+        selected=df["config"].isin(ok["config"]).map({True: "yes", False: "no"}),
+        on_frontier=df["config"].isin(frontier))
     points = (alt.Chart(chart_df)
-              .mark_circle(size=180, opacity=0.9)
+              .mark_circle(size=170, opacity=0.9)
               .encode(
                   x=alt.X("energy:Q", scale=alt.Scale(type="log"),
                           title="Energy per 1,000 inferences (J, measured on M2)"),
                   y=alt.Y("accuracy:Q", scale=alt.Scale(zero=False),
                           title="Test accuracy (%), 5-seed mean"),
                   color=alt.Color("selected:N",
-                                  scale=alt.Scale(domain=[True, False],
-                                                  range=["#c1440e", "#b9b9b9"]),
+                                  scale=alt.Scale(domain=["yes", "no"],
+                                                  range=["#1b4332", "#c1c8c2"]),
                                   legend=alt.Legend(title="Meets constraints")),
                   tooltip=["config", "accuracy", "energy", "p95", "size_mb"])
-              .properties(height=430))
-
-    # The frontier is the set of configurations nothing else beats on BOTH
-    # energy and accuracy. It includes points that are cheap but useless -- that
-    # is what the frontier means, and hiding them would be editing the result.
+              .properties(height=420))
     line = (alt.Chart(chart_df[chart_df["on_frontier"]].sort_values("energy"))
-            .mark_line(strokeDash=[6, 4], color="#c1440e", opacity=0.8)
+            .mark_line(strokeDash=[6, 4], color="#86af99")
             .encode(x=alt.X("energy:Q", scale=alt.Scale(type="log")),
                     y=alt.Y("accuracy:Q", scale=alt.Scale(zero=False))))
     st.altair_chart(line + points, use_container_width=True)
-    st.caption("Log-scale x axis. The dashed line is the Pareto frontier: "
-               "configurations nothing else beats on both energy and accuracy. "
-               "It includes cheap-but-unusable points, because that is what the "
-               "frontier means — the accuracy slider is how you exclude them. "
-               "Energy and accuracy are measured figures from the benchmark; "
-               "the filtering is the only thing computed here.")
+    st.caption("Dashed line: the Pareto frontier, which nothing beats on both "
+               "energy and accuracy. Log-scale x axis.")
 
 
-# ------------------------------------------------------- ④ receipts ---------
+# --------------------------------------------------------------- Method -----
 
-with receipts_tab:
-    st.subheader("Why you should believe the numbers on the other three tabs")
+with method_tab:
     prov = dd.provenance(summary)
     env = prov["environment"]
 
+    st.subheader("Provenance")
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown("**Provenance**")
         st.code(
             f"split file    {prov['split_csv']}\n"
             f"split sha256  {prov['split_sha256']}\n"
             f"recipe hash   {prov['recipe_hash']}\n"
             f"seeds/model   {', '.join(str(s) for s in prov['seeds'])}",
             language="text")
-        st.caption("Every accuracy figure references that split by hash. "
-                   "EuroSAT ships no official train/test split, so the fold "
-                   "definition is committed to the repository and verified "
-                   "against its own checksum on every run.")
+        st.markdown(
+            "EuroSAT ships no official train/test split, so every published "
+            "EuroSAT accuracy is measured against folds the reader cannot "
+            "inspect. This benchmark commits its split and references it by "
+            "hash from every result; runs abort if the file stops matching its "
+            "own checksum. Each architecture is trained on one identical "
+            "recipe over five seeds, and accuracy is reported as a mean with a "
+            "Student-t confidence interval rather than a single lucky run.")
     with c2:
-        st.markdown("**Benchmark hardware** (not this server)")
-        st.dataframe(pd.DataFrame(
-            [{"Property": k, "Value": str(env.get(v, "not recorded"))}
-             for k, v in [("CPU", "cpu"), ("Cores", "cpu_cores_logical"),
-                          ("OS", "os"), ("Python", "python"),
-                          ("ONNX Runtime", "onnxruntime"),
-                          ("Measured (UTC)", "timestamp_utc")]]),
-            use_container_width=True, hide_index=True)
+        # Rendered as markdown rather than st.dataframe: inside a half-width
+        # column the grid truncates both headers and values to illegibility.
+        hardware = [("CPU", "cpu"), ("Cores", "cpu_cores_logical"),
+                    ("OS", "os"), ("Python", "python"),
+                    ("ONNX Runtime", "onnxruntime"),
+                    ("Measured (UTC)", "timestamp_utc")]
+        lines = ["| Property | Value |", "|---|---|"]
+        lines += [f"| {name} | {env.get(key, 'not recorded')} |"
+                  for name, key in hardware]
+        st.markdown("\n".join(lines))
+        st.caption("Benchmark hardware — not the server rendering this page.")
 
-    st.markdown("**Energy accounting**")
-    st.caption(prov.get("energy_note") or "not recorded")
-    st.caption(f"CO₂e assumes {fmt(prov['grid_intensity'], ',.0f')} gCO₂e/kWh — "
-               f"{prov.get('grid_intensity_source', 'source not recorded')}.")
-
-    ex = prov["exclusions"]
-    st.markdown("**Excluded measurement windows**")
-    if ex:
-        st.caption(f"{ex.get('windows_excluded')} of {ex.get('windows_total')} "
-                   f"windows were excluded by criteria registered *before* the "
-                   f"measurements were taken. They remain in the published data; "
-                   f"nothing was deleted.")
-        if ex.get("excluded_windows"):
-            st.dataframe(pd.DataFrame([{
-                "Config": f"{w['model']} {w['precision']} seed{w['seed']} "
-                          f"t{w['threads_intra_op']} b{w['batch_size']}",
-                "Reason": "; ".join(w["reasons"]),
-            } for w in ex["excluded_windows"]]),
-                use_container_width=True, hide_index=True)
-
-    st.markdown("**Known confound**")
-    for threads, regime in prov["thread_regime_confound"].items():
-        icon = "⚠️" if regime.get("bimodal") else "✅"
-        st.caption(f"{icon} **{threads}** — {regime.get('note')}")
-    st.caption("Everything on the other tabs uses the single-thread "
-               "configuration, which is the unconfounded one.")
-
+    st.subheader("Energy accounting")
     st.markdown(
-        "**Read further** — "
+        f"{prov.get('energy_note') or 'not recorded'} CO₂e assumes "
+        f"{fmt(prov['grid_intensity'], ',.0f')} gCO₂e/kWh "
+        f"({prov.get('grid_intensity_source', 'source not recorded')}). That "
+        f"constant scales every carbon figure linearly, so it is stated rather "
+        f"than buried in a library default. Inference latency on this page is "
+        f"measured live because a server can time itself honestly; energy "
+        f"cannot be, because this container exposes no power telemetry, and an "
+        f"estimate presented as a measurement is the failure mode this project "
+        f"exists to avoid.")
+
+    st.subheader("Excluded measurement windows")
+    ex = prov["exclusions"]
+    if ex:
+        st.markdown(
+            f"{ex.get('windows_excluded')} of {ex.get('windows_total')} windows "
+            f"were excluded by criteria registered before the measurements were "
+            f"taken. They remain in the published data; nothing was deleted, and "
+            f"removing them changes no headline figure.")
+        if ex.get("excluded_windows"):
+            lines = ["| Configuration | Reason |", "|---|---|"]
+            for w in ex["excluded_windows"]:
+                lines.append(
+                    f"| {w['model']} {w['precision']} seed{w['seed']} "
+                    f"t{w['threads_intra_op']} b{w['batch_size']} "
+                    f"| {'; '.join(w['reasons'])} |")
+            st.markdown("\n".join(lines))
+
+    st.subheader("Known confound")
+    for threads, regime in prov["thread_regime_confound"].items():
+        st.markdown(f"**{threads}** — {regime.get('note')}")
+    st.markdown(
+        "Every figure on the other tabs uses the single-thread configuration, "
+        "which is the unconfounded one. The four-thread windows are published "
+        "with the confound characterised rather than quietly dropped.")
+
+    st.subheader("Read further")
+    st.markdown(
         "[PROTOCOL.md](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/blob/master/PROTOCOL.md) "
-        "(measurement protocol, outcomes and every deviation) · "
-        "[DATASHEET.md](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/blob/master/DATASHEET.md) · "
+        "— measurement protocol, outcomes and every deviation · "
+        "[DATASHEET.md](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/blob/master/DATASHEET.md) "
+        "— dataset documentation · "
         "[repository](https://github.com/eklavya072/TerraScope-GeoSpatial-AI)")

@@ -177,18 +177,48 @@ def test_app_renders_all_four_screens_without_error():
         parts.extend(str(element.value) for element in group)
     text = " ".join(parts)
 
-    for expected in ("measured live on this server",   # honesty line
-                     "held-out test fold",             # screen 1 guarantee
-                     "post-training quantisation",     # screen 2
-                     "Pareto frontier",                # screen 3
-                     "split sha256",                   # screen 4 receipts
-                     "excluded"):                      # screen 4 exclusions
+    for expected in ("measured live on this server",   # provenance note
+                     "held-out test fold",             # Classify guarantee
+                     "Paired per-seed change",         # Quantisation deltas
+                     "Pareto frontier",                # Deploy
+                     "split sha256",                   # Method provenance
+                     "excluded"):                      # Method exclusions
         assert expected in text, f"missing from rendered app: {expected!r}"
 
 
-def test_honesty_line_is_present_and_not_dismissible():
+def test_provenance_note_is_present_and_not_dismissible():
+    """The note sits in the page body above the tabs, so it is visible on every
+    screen and cannot be dismissed. It must name both what is measured here and
+    what is looked up, or a reader could mistake one for the other."""
     st_testing = pytest.importorskip("streamlit.testing.v1")
     at = st_testing.AppTest.from_file(APP, default_timeout=120).run()
-    warnings = " ".join(str(w.value) for w in at.warning)
-    assert "measured live on this server" in warnings
-    assert "no power telemetry" in warnings
+    body = " ".join(str(m.value) for m in at.markdown)
+    assert "measured live on this server" in body
+    assert "looked up from the benchmark" in body
+    assert "Apple M2" in body
+    # Rendered as page copy, not a toast or an st.warning banner.
+    assert not at.warning, "the note must not be a dismissible-looking banner"
+
+
+def test_app_uses_no_emoji():
+    """Emoji read as a tutorial project. The finding should carry the page."""
+    for path in (APP, os.path.join("app", "demo_data.py")):
+        text = open(path, encoding="utf-8").read()
+        found = [c for c in text
+                 if ord(c) > 0x2190 and c not in "\u2014\u00b7\u00d7\u2265\u00b1\u2264"]
+        assert not found, f"{path} contains emoji/pictographs: {set(found)}"
+
+
+def test_theme_and_stylesheet_are_present():
+    """The palette is carried by config.toml plus one stylesheet; CSS lives in a
+    file so the app source stays free of decimal literals."""
+    config = open(os.path.join(".streamlit", "config.toml")).read()
+    assert "primaryColor" in config and "backgroundColor" in config
+    css = open(os.path.join("app", "style.css")).read()
+    assert "--primary" in css and "Inter" in css
+    # The app may wrap the stylesheet in a <style> tag; what it must not do is
+    # carry CSS rules inline, which is how decimal literals creep back in.
+    source = open(APP).read()
+    assert "style.css" in source, "the stylesheet must be loaded from file"
+    assert "font-family:" not in source and "border-radius:" not in source, \
+        "CSS rules belong in app/style.css, not inline in the app source"

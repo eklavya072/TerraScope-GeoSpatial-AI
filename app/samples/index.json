@@ -1,0 +1,150 @@
+{
+  "fold": "test",
+  "note": "Every tile below is from the held-out TEST fold of the committed split; no model in this repository was trained on any of them.",
+  "per_class": 2,
+  "selection_seed": 7,
+  "split_csv": "splits/eurosat_split_seed42.csv",
+  "split_sha256": "b77443792ba4b11439ed220b3dea699ce61e48e0a0af49c51fb6a8cf43b0595d",
+  "tiles": [
+    {
+      "file": "AnnualCrop_1746.png",
+      "fold": "test",
+      "source_sha256": "a391c5ff2a1b24605cd2dce4d4be0ab017a58776e4ac66176302b6a05bab52a5",
+      "split_path": "AnnualCrop/AnnualCrop_1746.jpg",
+      "true_label": "AnnualCrop"
+    },
+    {
+      "file": "AnnualCrop_2434.png",
+      "fold": "test",
+      "source_sha256": "56fa998bf53a733e8629bcd1f36fbf0df99191e8e705cc0c08dd8301b3ff5549",
+      "split_path": "AnnualCrop/AnnualCrop_2434.jpg",
+      "true_label": "AnnualCrop"
+    },
+    {
+      "file": "Forest_1151.png",
+      "fold": "test",
+      "source_sha256": "760dcf05feee110fe4187acd4890e20efb2876f16aafa4892d737b9a9be286d4",
+      "split_path": "Forest/Forest_1151.jpg",
+      "true_label": "Forest"
+    },
+    {
+      "file": "Forest_2745.png",
+      "fold": "test",
+      "source_sha256": "e906d758c861696c5b6922625e0a0f81901488a51cd6e17989b924869909826a",
+      "split_path": "Forest/Forest_2745.jpg",
+      "true_label": "Forest"
+    },
+    {
+      "file": "HerbaceousVegetation_1418.png",
+      "fold": "test",
+      "source_sha256": "2e345e3ca51ddcc63c23283198e825378aef5043089661459b1b0a4c0b853078",
+      "split_path": "HerbaceousVegetation/HerbaceousVegetation_1418.jpg",
+      "true_label": "HerbaceousVegetation"
+    },
+    {
+      "file": "HerbaceousVegetation_755.png",
+      "fold": "test",
+      "source_sha256": "a6e532006a45356068fa9b464fb8de314fa22e0571bf1a5047ac0d594d595b24",
+      "split_path": "HerbaceousVegetation/HerbaceousVegetation_755.jpg",
+      "true_label": "HerbaceousVegetation"
+    },
+    {
+      "file": "Highway_1221.png",
+      "fold": "test",
+      "source_sha256": "93cbb4ad76dec8f8715b28cb6044fa07f5b5820c69b67bb8caea134fd63f670c",
+      "split_path": "Highway/Highway_1221.jpg",
+      "true_label": "Highway"
+    },
+    {
+      "file": "Highway_179.png",
+      "fold": "test",
+      "source_sha256": "9eda6630f6ab91d233f2dbc197ba9880cb9631f9b50b1535554e3e7d34d99e69",
+      "split_path": "Highway/Highway_179.jpg",
+      "true_label": "Highway"
+    },
+    {
+      "file": "Industrial_1136.png",
+      "fold": "test",
+      "source_sha256": "253786ed3eab77247c36452fcb4958414be404638fcf6994a6b66a4eacbae9f4",
+      "split_path": "Industrial/Industrial_1136.jpg",
+      "true_label": "Industrial"
+    },
+    {
+      "file": "Industrial_2355.png",
+      "fold": "test",
+      "source_sha256": "d77c803cc9033ff56909fef9bc454ed3daf3068a00aef36c8b2284d6909d257c",
+      "split_path": "Industrial/Industrial_2355.jpg",
+      "true_label": "Industrial"
+    },
+    {
+      "file": "Pasture_1413.png",
+      "fold": "test",
+      "source_sha256": "403f70670dac72739adc58fb14de6f86d4b288d770e3e0af19003bd83f67b129",
+      "split_path": "Pasture/Pasture_1413.jpg",
+      "true_label": "Pasture"
+    },
+    {
+      "file": "Pasture_292.png",
+      "fold": "test",
+      "source_sha256": "db0d9df8eeaccfac3f0c1c33b4487b4b8659b486323c79e6e147c446ff471b36",
+      "split_path": "Pasture/Pasture_292.jpg",
+      "true_label": "Pasture"
+    },
+    {
+      "file": "PermanentCrop_104.png",
+      "fold": "test",
+      "source_sha256": "ee498850102318bb5bc90a80ac8eaf1d5fff3fd5a888eec91ca785648cfd22b8",
+      "split_path": "PermanentCrop/PermanentCrop_104.jpg",
+      "true_label": "PermanentCrop"
+    },
+    {
+      "file": "PermanentCrop_1168.png",
+      "fold": "test",
+      "source_sha256": "596f9702a1deb5bcf39edebe8da70c4f60dc3e47065c483270fe48308f2b1e2a",
+      "split_path": "PermanentCrop/PermanentCrop_1168.jpg",
+      "true_label": "PermanentCrop"
+    },
+    {
+      "file": "Residential_303.png",
+      "fold": "test",
+      "source_sha256": "9735680e856c5319699dd817cb6e77788b44358ff6ac7a5543317394a9353d8c",
+      "split_path": "Residential/Residential_303.jpg",
+      "true_label": "Residential"
+    },
+    {
+      "file": "Residential_359.png",
+      "fold": "test",
+      "source_sha256": "658277b164b3c824d7b025b26c195f09c400d67d76331d56fa6ffaf13edc1448",
+      "split_path": "Residential/Residential_359.jpg",
+      "true_label": "Residential"
+    },
+    {
+      "file": "River_120.png",
+      "fold": "test",
+      "source_sha256": "fc1db24851ae55f1e3b943832c42082952e84a557d8da1c47445a98e27f8ff79",
+      "split_path": "River/River_120.jpg",
+      "true_label": "River"
+    },
+    {
+      "file": "River_1512.png",
+      "fold": "test",
+      "source_sha256": "22ce78063fa6111c04a36348fc41695b2412cef6372b5bb58e15e1781d4c98fd",
+      "split_path": "River/River_1512.jpg",
+      "true_label": "River"
+    },
+    {
+      "file": "SeaLake_1539.png",
+      "fold": "test",
+      "source_sha256": "833d769f9c19b5af640b21640bedbff5dae6aa5aa524a5a28ea21aa1d6c2f40b",
+      "split_path": "SeaLake/SeaLake_1539.jpg",
+      "true_label": "SeaLake"
+    },
+    {
+      "file": "SeaLake_865.png",
+      "fold": "test",
+      "source_sha256": "6b86277035624f95052b5c4bf7f739fad4e5e67f8c36dccd97dfbbe4cf19475d",
+      "split_path": "SeaLake/SeaLake_865.jpg",
+      "true_label": "SeaLake"
+    }
+  ]
+}

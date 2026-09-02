@@ -1,6 +1,7 @@
 # TerraScope — the accuracy–energy trade-off for land-cover classification on CPU-only hardware
 
 [![CI](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://terrascope.streamlit.app)
 [![License: MIT](https://img.shields.io/badge/code-MIT-blue)](LICENSE)
 [![Data: CC BY 4.0](https://img.shields.io/badge/results%20data-CC--BY--4.0-blue)](LICENSE-DATA)
 [![EuroSAT](https://img.shields.io/badge/dataset-EuroSAT%20(MIT)-green)](https://github.com/phelber/eurosat)
@@ -491,17 +492,29 @@ tests/                  58 tests over the committed artefacts; no GPU or dataset
 splits/                 the committed split, its metadata and its hash
 results/                runs.jsonl, bench.jsonl, memory.jsonl, summary.json, tables, figure
 models_release/         the recommended deployable model (EfficientNet-Lite0 int8)
-app/                    legacy Streamlit demo, isolated from the benchmark (see app/README.md)
+app_demo.py             the demo app: race models live, see what quantisation costs
+app/                    demo assets -- shipped ONNX graphs, test-fold tiles, data layer
+requirements.txt        demo app dependencies only (no torch, no tensorflow)
 PROTOCOL.md             measurement protocol, outcomes and deviations
 DATASHEET.md            Datasheets for Datasets (Gebru et al.)
 ```
 
-The repository also contains a Streamlit demo app under `app/`, from the
-project's earlier life as a single-model demo. It is unrelated to the benchmark,
-keeps its own dependencies, and deliberately shares no environment with it so
-that TensorFlow never loads inside a measured run. Its previously reported
-figure — 95.67% for a fine-tuned ResNet-50 — was independently verified during
-this work, but it was measured on a third-party split whose training fold
-overlaps 1,949 of the 2,700 tiles in this benchmark's test fold, so it is not
-comparable to anything reported here and is not carried forward. See
-[app/README.md](app/README.md).
+## Demo
+
+`app_demo.py` is a Streamlit app that shows the finding in about a minute: it
+races every model on a tile from the held-out test fold, measuring latency
+**live on whatever server it is running on**, and looks up accuracy, energy and
+CO₂e from the committed benchmark. It never computes an energy figure — the
+deployment container has no power telemetry, and the app says so on every
+screen. Anything it cannot source says *not measured*.
+
+```bash
+pip install -r requirements.txt
+streamlit run app_demo.py
+```
+
+The original TensorFlow demo has moved to the `archive/legacy-tensorflow-app`
+branch. Its reported 95.67% was independently verified during this work, but it
+was measured on a third-party split whose training fold overlaps 1,949 of the
+2,700 tiles in this benchmark's test fold, so it is not comparable to anything
+here and is not carried forward.

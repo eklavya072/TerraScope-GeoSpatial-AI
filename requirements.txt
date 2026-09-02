@@ -1,0 +1,16 @@
+# Dependencies for the Streamlit demo app (app_demo.py) ONLY.
+#
+# The benchmark itself is installed from pyproject.toml + uv.lock; this file
+# exists because Streamlit Community Cloud installs from requirements.txt at the
+# repository root. TensorFlow and PyTorch are deliberately absent: the demo runs
+# on ONNX Runtime alone, and a stray framework loading inside the app would both
+# exceed the memory budget and make the live latency figures meaningless.
+#
+# Versions are pinned. An unpinned onnxruntime would silently change the
+# latency numbers the app measures.
+streamlit==1.60.0
+onnxruntime==1.29.0
+numpy==2.5.2
+pillow==11.3.0
+pandas==2.3.3
+altair==5.5.0

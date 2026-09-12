@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TerraScope — trade-offs</title>
+<meta name="description" content="What quantisation costs, and which configuration to deploy under real constraints.">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .sliders{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:1.6rem}
+  @media(max-width:760px){.sliders{grid-template-columns:1fr}}
+  input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
+  .rv{font-family:var(--mono);font-size:.95rem;font-weight:500;color:var(--brand)}
+  .verdictcard{border:1px solid var(--rule);background:var(--surface);border-radius:14px}
+  .frontier{width:100%;height:auto;display:block}
+  .frontier .dot{fill:#8d9b8f;stroke:var(--surface);stroke-width:1.5;
+    transition:fill .18s ease,r .18s ease}
+  .frontier .dot.meets{fill:var(--brand)}
+  /* A point names itself on hover. The halo is an invisible larger target so
+     the label does not require pixel-accurate pointing. */
+  .frontier .halo{fill:transparent}
+  .frontier .pt{cursor:default}
+  .frontier .tip{font-family:var(--sans);font-size:9px;fill:var(--ink);
+    opacity:0;transition:opacity .14s ease;pointer-events:none;
+    paint-order:stroke;stroke:var(--canvas);stroke-width:3px;stroke-linejoin:round}
+  .frontier .pt:hover .tip{opacity:1}
+  .frontier .pt:hover .dot{fill:var(--forest)}
+  .frontier .pt:hover .dot.meets{fill:var(--brand-dark)}
+  .frontier .line{fill:none;stroke:#9aa89c;stroke-width:1;stroke-dasharray:5 4}
+  .frontier text{font-family:var(--mono);font-size:11px;fill:var(--ink-faint)}
+  .frontier .axis{stroke:var(--rule);stroke-width:1}
+</style>
+</head>
+<body class="lit">
+
+<nav class="nav" id="nav">
+  <a class="brand" href="index.html">
+    <svg class="mark" viewBox="0 0 26 20" aria-hidden="true">
+      <path d="M1 18C5 18 6 12.4 11 12.4S17.2 18 25 18"/>
+      <path d="M4.2 13.4C7 13.4 8.2 8.4 12 8.4S17 13.4 21.8 13.4"/>
+      <path d="M7.4 8.8C9.2 8.8 10.2 5 13 5S16.8 8.8 18.6 8.8"/>
+      <circle class="pin" cx="13" cy="2.2" r="1.5"/>
+    </svg>
+    <span>TerraScope</span>
+  </a>
+  <div class="nav-links" id="navlinks">
+    <span class="nav-pill" id="navpill"></span>
+    <a href="index.html">Story</a>
+    <a href="trade-offs.html">Trade-offs</a>
+    <a href="method.html">Method</a>
+  </div>
+  <div class="nav-right">
+    <span class="readout" title="Energy spread between configurations of statistically equal accuracy">
+      <em>&#916; energy</em><b id="nav-fig">&#8212;</b>
+    </span>
+    <a class="btn btn-primary" href="demo.html">Run a model</a>
+  </div>
+  <i class="nav-prog" id="navprog"></i>
+</nav>
+
+<main class="page">
+  <section style="padding-bottom:clamp(30px,4vh,50px)">
+    <div class="wrap">
+      <h1 class="display opens" style="font-size:clamp(2rem,4.4vw,3.2rem)">What it costs, and what to deploy.</h1>
+      <p class="lede">Quantisation is close to free on one architecture and
+        destroys another. Below that, set the constraints a real deployment
+        has and read the cheapest configuration that satisfies them.</p>
+    </div>
+  </section>
+
+  <section class="tint">
+    <div class="wrap">
+      <h2 class="h reveal opens">Quantising is not a safe default.</h2>
+      <p class="lede rise">Paired per-seed change against each model's own fp32
+        export, with a Student-t interval over seeds.</p>
+      <div class="quant" id="quant" style="margin-top:clamp(32px,4vh,52px)"></div>
+      <div class="tscroll" style="margin-top:clamp(36px,5vh,60px)">
+        <table class="data" id="qtable"></table>
+      </div>
+      <p class="note">Every measured precision, not just the two above. An
+        interval spanning zero means no detectable change.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2 class="h reveal opens">Set the constraints. Read the frontier.</h2>
+      <p class="lede rise">Give the deployment its real limits and the cheapest
+        configuration that satisfies them is the answer. Where nothing
+        qualifies, that is also an answer, and this page says so rather than
+        relaxing the question.</p>
+
+      <div class="sliders" style="margin-top:clamp(32px,4vh,52px)">
+        <div class="field">
+          <label for="acc">Minimum accuracy <span class="rv" id="accv"></span></label>
+          <input type="range" id="acc">
+        </div>
+        <div class="field">
+          <label for="lat">Maximum p95 latency <span class="rv" id="latv"></span></label>
+          <input type="range" id="lat">
+        </div>
+      </div>
+
+      <div class="verdictcard" id="verdict"></div>
+
+      <div style="margin-top:clamp(32px,4vh,52px);border:1px solid var(--rule);border-radius:14px;padding:1.6rem;background:var(--surface)">
+        <svg class="frontier" id="chart" viewBox="0 0 720 400"
+             role="img" aria-label="Accuracy against energy for every measured configuration, with the Pareto frontier marked."></svg>
+      </div>
+      <p class="note">The dashed line is the Pareto frontier: nothing measured
+        beats a point on it for both energy and accuracy. Amber marks the
+        configurations meeting your constraints. The horizontal axis is
+        logarithmic.</p>
+    </div>
+  </section>
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="band">
+        <h3 class="h3">What the frontier is for</h3>
+        <p>Every point above is a configuration that was actually measured. The
+          line joins the ones nothing else beats on both axes at once — pick a
+          constraint and the cheapest configuration that still satisfies it is
+          the one to deploy. There is no interpolation here and no model that
+          was not run.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="index.html">
+        <svg class="mark" viewBox="0 0 26 20" aria-hidden="true">
+          <path d="M1 18C5 18 6 12.4 11 12.4S17.2 18 25 18"/>
+          <path d="M4.2 13.4C7 13.4 8.2 8.4 12 8.4S17 13.4 21.8 13.4"/>
+          <path d="M7.4 8.8C9.2 8.8 10.2 5 13 5S16.8 8.8 18.6 8.8"/>
+          <circle class="pin" cx="13" cy="2.2" r="1.5"/>
+        </svg>
+        <span>TerraScope</span>
+      </a>
+      <nav class="flinks">
+        <a href="demo.html">Demo</a>
+        <a href="trade-offs.html">Trade-offs</a>
+        <a href="method.html">Method</a>
+        <a href="https://github.com/eklavya072/TerraScope-GeoSpatial-AI">Repository</a>
+        <a href="https://github.com/phelber/eurosat">EuroSAT, MIT</a>
+        <a href="https://www.pexels.com/video/aerial-view-of-tropical-waterfall-in-lush-jungle-37277807/">Footage</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+<script src="assets/tradeoffs.js"></script>
+</body>
+</html>

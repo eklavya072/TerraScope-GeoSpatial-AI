@@ -491,7 +491,7 @@ tests/                  58 tests over the committed artefacts; no GPU or dataset
 .github/workflows/      CI: tests, split hash, README regenerability, imports
 splits/                 the committed split, its metadata and its hash
 results/                runs.jsonl, bench.jsonl, memory.jsonl, summary.json, tables, figure
-models_release/         the recommended deployable model (EfficientNet-Lite0 int8)
+web/                    the demo site: static pages, vendored runtime, served ONNX graphs
 app_demo.py             the demo app: race models live, see what quantisation costs
 app/                    demo assets -- shipped ONNX graphs, test-fold tiles, data layer
 requirements.txt        demo app dependencies only (no torch, no tensorflow)

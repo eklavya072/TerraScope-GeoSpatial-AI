@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TerraScope — method</title>
+<meta name="description" content="How the benchmark was run, what it measured, and what it refuses to claim.">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .hashes{font-family:var(--mono);font-size:.84rem;line-height:2;color:var(--ink-soft);
+    border:1px solid var(--rule);padding:1.15rem 1.3rem;overflow-x:auto;
+    margin-top:clamp(28px,4vh,44px)}
+  .hashes .k{color:var(--ink-faint);text-transform:uppercase;letter-spacing:.12em;
+    display:inline-block;min-width:11rem}
+  .hashes .v{color:var(--ink)}
+  .stages{counter-reset:stage;margin-top:clamp(36px,5vh,58px);
+    border-top:1px solid var(--rule)}
+  .stage-row{display:grid;grid-template-columns:minmax(140px,200px) 1fr;gap:2rem;
+    padding:2rem 0;border-bottom:1px solid var(--rule)}
+  @media(max-width:760px){.stage-row{grid-template-columns:1fr;gap:.6rem}}
+  .stage-row h3{margin:0;font-family:var(--serif);font-size:1.3rem;font-weight:600;
+    color:var(--brand);letter-spacing:-.02em}
+  .stage-row p{margin:0;color:var(--ink-soft);font-size:1rem;line-height:1.62}
+  table.env{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.88rem}
+  table.env td{padding:.65rem 0;border-bottom:1px solid var(--rule);color:var(--ink)}
+  table.env td:first-child{color:var(--ink-faint);text-transform:uppercase;
+    letter-spacing:.11em;width:45%}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:2.4rem}
+  @media(max-width:820px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body class="lit">
+
+<nav class="nav" id="nav">
+  <a class="brand" href="index.html">
+    <svg class="mark" viewBox="0 0 26 20" aria-hidden="true">
+      <path d="M1 18C5 18 6 12.4 11 12.4S17.2 18 25 18"/>
+      <path d="M4.2 13.4C7 13.4 8.2 8.4 12 8.4S17 13.4 21.8 13.4"/>
+      <path d="M7.4 8.8C9.2 8.8 10.2 5 13 5S16.8 8.8 18.6 8.8"/>
+      <circle class="pin" cx="13" cy="2.2" r="1.5"/>
+    </svg>
+    <span>TerraScope</span>
+  </a>
+  <div class="nav-links" id="navlinks">
+    <span class="nav-pill" id="navpill"></span>
+    <a href="index.html">Story</a>
+    <a href="trade-offs.html">Trade-offs</a>
+    <a href="method.html">Method</a>
+  </div>
+  <div class="nav-right">
+    <span class="readout" title="Energy spread between configurations of statistically equal accuracy">
+      <em>&#916; energy</em><b id="nav-fig">&#8212;</b>
+    </span>
+    <a class="btn btn-primary" href="demo.html">Run a model</a>
+  </div>
+  <i class="nav-prog" id="navprog"></i>
+</nav>
+
+<main class="page">
+  <section style="padding-bottom:clamp(24px,3vh,40px)">
+    <div class="wrap">
+      <h1 class="display opens" style="font-size:clamp(2rem,4.4vw,3.2rem)">How it was measured.</h1>
+      <p class="lede">A benchmark is worth exactly as much as its provenance,
+        so the provenance ships with it. Every claim on this site can be traced
+        from here to a file in the repository.</p>
+      <!-- The raw hashes meant nothing to a reader who had not been told what
+           they are for. Each one now says what it guarantees, in a sentence,
+           with the fingerprint underneath as evidence rather than as the
+           headline. -->
+      <div class="provenance" id="hashes"></div>
+    </div>
+  </section>
+
+  <section class="warm">
+    <div class="wrap">
+      <h2 class="h reveal opens">One recipe, five architectures, five seeds.</h2>
+      <p class="lede rise">Every architecture is trained under an identical
+        recipe. There is deliberately no supported way to give one model a
+        tuned recipe of its own, because a benchmark where each entrant brings
+        its own training budget measures the budget, not the architecture.</p>
+      <div class="stages">
+        <div class="stage-row rise"><h3>Split</h3>
+          <p>EuroSAT ships no official train and test partition, so every
+             published EuroSAT accuracy is measured against folds the reader
+             cannot inspect. This split is generated deterministically from one
+             seed, verified byte-identical across runs and across
+             PYTHONHASHSEED values, and referenced by hash from every result
+             row. A run aborts if the file stops matching its own checksum.</p></div>
+        <div class="stage-row rise"><h3>Train</h3>
+          <p>Five architectures, five seeds each, under the single hashed
+             recipe. Training used the GPU where one was available, purely to
+             make the matrix tractable. No reported figure depends on the
+             training device: accuracy comes from the saved checkpoints and
+             every timing is measured later on the CPU.</p></div>
+        <div class="stage-row rise"><h3>Export</h3>
+          <p>Each checkpoint is exported to ONNX in fp32 and quantised to int8
+             both dynamically and statically, with static calibration drawn
+             from the training fold only. All 25 fp32 exports reproduce their
+             checkpoint's accuracy exactly, asserted as a test rather than
+             observed once: latency is measured on the exported graph while
+             accuracy is attributed to the model, so a drift would mean every
+             row described two different models.</p></div>
+        <div class="stage-row rise"><h3>Measure</h3>
+          <p>Inference runs through ONNX Runtime's CPU execution provider only.
+             Apple's GPU and CoreML providers are excluded deliberately, not
+             merely left unused: the question is what CPU-only hardware
+             achieves. Thread counts are pinned in both the runtime session and
+             the environment, because BLAS pools ignore the session setting and
+             unpinned threads are the most common reason CPU latency fails to
+             reproduce.</p></div>
+        <div class="stage-row rise"><h3>Integrate</h3>
+          <p>Energy is integrated from on-die package power sampled at 200 ms
+             across each timed window. It is estimated, not metered at the
+             wall, and this site says so everywhere it appears.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2 class="h reveal opens">What the benchmark refuses to claim.</h2>
+      <p class="lede rise">The limits are part of the result. Reading them is
+        how you know which of these numbers travel to your hardware and which
+        do not.</p>
+      <div class="cards" id="limits"></div>
+    </div>
+  </section>
+
+  <section class="dark">
+    <div class="wrap">
+      <h2 class="h reveal opens">Excluded windows, and the confound.</h2>
+      <div class="two" style="margin-top:clamp(30px,4vh,50px)">
+        <div><p class="lede" id="exclusions">Four of 300 measurement windows were
+            excluded by criteria registered before any measurement was taken.
+            None falls in the primary reporting configuration, so no headline
+            figure changes when they are removed. The rows remain in the
+            published data.</p>
+          <div class="tscroll" style="margin-top:1.2rem">
+            <table class="data" id="extable"></table></div></div>
+        <div><p class="lede" id="confound"></p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="two">
+        <div><h3 class="h3">Benchmark hardware, not your machine</h3>
+          <table class="env" id="env"></table></div>
+        <div><h3 class="h3">Read further</h3>
+          <p class="lede"><a class="mark" href="https://github.com/eklavya072/TerraScope-GeoSpatial-AI/blob/master/PROTOCOL.md">PROTOCOL.md</a>
+            records the measurement protocol, its outcomes and every deviation
+            from the original pre-registration, including two criteria that
+            were never instrumented.
+            <a class="mark" href="https://github.com/eklavya072/TerraScope-GeoSpatial-AI/blob/master/DATASHEET.md">DATASHEET.md</a>
+            documents the split and results artefacts following Datasheets for
+            Datasets.
+            <a class="mark" href="https://github.com/eklavya072/TerraScope-GeoSpatial-AI">The repository</a>
+            carries the raw measurement rows, so every figure here can be
+            recomputed.</p></div>
+      </div>
+    </div>
+  </section>
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="band">
+        <h3 class="h3">Why any of this is checkable</h3>
+        <p>The split, the recipe and every measurement window are committed to
+          the repository, and the figures on this site are read from them at
+          page load rather than typed into the markup. Eighty-two tests run
+          over the artefacts on every change; several of them exist purely to
+          fail if a number here stops matching the benchmark behind it.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="index.html">
+        <svg class="mark" viewBox="0 0 26 20" aria-hidden="true">
+          <path d="M1 18C5 18 6 12.4 11 12.4S17.2 18 25 18"/>
+          <path d="M4.2 13.4C7 13.4 8.2 8.4 12 8.4S17 13.4 21.8 13.4"/>
+          <path d="M7.4 8.8C9.2 8.8 10.2 5 13 5S16.8 8.8 18.6 8.8"/>
+          <circle class="pin" cx="13" cy="2.2" r="1.5"/>
+        </svg>
+        <span>TerraScope</span>
+      </a>
+      <nav class="flinks">
+        <a href="demo.html">Demo</a>
+        <a href="trade-offs.html">Trade-offs</a>
+        <a href="method.html">Method</a>
+        <a href="https://github.com/eklavya072/TerraScope-GeoSpatial-AI">Repository</a>
+        <a href="https://github.com/phelber/eurosat">EuroSAT, MIT</a>
+        <a href="https://www.pexels.com/video/aerial-view-of-tropical-waterfall-in-lush-jungle-37277807/">Footage</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+<script src="assets/method.js"></script>
+</body>
+</html>

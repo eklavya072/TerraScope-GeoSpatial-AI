@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TerraScope — run the models</title>
+<meta name="description" content="Run the benchmark's own ONNX graphs in your browser on tiles from the held-out test fold.">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  /* minmax(0,1fr), not 1fr: a `1fr` track takes its minimum from the
+     content, and the widest thing in this one is the results table. That
+     stretched the whole grid — and with it the controls column and the page —
+     to the table's natural width instead of letting .tscroll scroll. */
+  .layout{display:grid;grid-template-columns:minmax(200px,260px) minmax(0,1fr);
+    gap:2rem;margin-top:clamp(28px,4vh,44px)}
+  @media(max-width:820px){.layout{grid-template-columns:minmax(0,1fr)}}
+  .controls{display:flex;flex-direction:column;gap:1.3rem}
+  .runbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+    flex-wrap:wrap;margin-bottom:1.2rem}
+  .status{font-size:.9rem;color:var(--ink-soft)}
+  .status.busy{color:var(--brand)}
+  .bar{height:3px;background:var(--rule);border-radius:99px;margin-top:.55rem;overflow:hidden}
+  .bar i{display:block;height:100%;width:100%;background:var(--brand);
+    transform:scaleX(0);transform-origin:left;transition:transform .3s ease}
+
+  /* One green on the page that carries information. */
+  .verdict.hit::before{content:"\2713\00a0"}
+  table.data tbody tr{transition:background .18s ease}
+  table.data tbody tr:hover{background:rgba(21,36,28,.03)}
+</style>
+</head>
+<body class="lit">
+
+<nav class="nav" id="nav">
+  <a class="brand" href="index.html">
+    <svg class="mark" viewBox="0 0 26 20" aria-hidden="true">
+      <path d="M1 18C5 18 6 12.4 11 12.4S17.2 18 25 18"/>
+      <path d="M4.2 13.4C7 13.4 8.2 8.4 12 8.4S17 13.4 21.8 13.4"/>
+      <path d="M7.4 8.8C9.2 8.8 10.2 5 13 5S16.8 8.8 18.6 8.8"/>
+      <circle class="pin" cx="13" cy="2.2" r="1.5"/>
+    </svg>
+    <span>TerraScope</span>
+  </a>
+  <div class="nav-links" id="navlinks">
+    <span class="nav-pill" id="navpill"></span>
+    <a href="index.html">Story</a>
+    <a href="trade-offs.html">Trade-offs</a>
+    <a href="method.html">Method</a>
+  </div>
+  <div class="nav-right">
+    <span class="readout" title="Energy spread between configurations of statistically equal accuracy">
+      <em>&#916; energy</em><b id="nav-fig">&#8212;</b>
+    </span>
+    <a class="btn btn-primary" href="demo.html">Run a model</a>
+  </div>
+  <i class="nav-prog" id="navprog"></i>
+</nav>
+
+<main class="page">
+  <section class="lab" style="padding-bottom:0">
+    <div class="wrap wide">
+      <h1 class="display opens" style="font-size:clamp(2rem,4.4vw,3.2rem)">Run them yourself.</h1>
+      <p class="lede">A tile from the held-out test fold is already loaded and
+        every selected model has been run on it. The graphs are the exact ONNX
+        files the benchmark measured, downloaded and executed in your browser.
+        Nothing leaves your machine. Add or remove architectures, or drop in
+        an image of your own, and the table follows.</p>
+    </div>
+  </section>
+
+  <section class="lab" style="padding-top:var(--flow-m)">
+    <div class="wrap wide">
+      <div class="console">
+        <div class="console-bar">
+          <span class="label">Classifier</span>
+          <span class="live" id="live">Running in your browser</span>
+        </div>
+        <div class="console-pad">
+          <div class="layout">
+            <div class="controls">
+              <div class="field">
+                <label for="tile">Tile</label>
+                <div class="pick"><select id="tile"></select>
+                  <svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5"/></svg>
+                </div>
+              </div>
+              <div class="field">
+                <label for="precision">Precision</label>
+                <div class="pick"><select id="precision">
+                  <option value="int8_static">int8_static</option>
+                  <option value="fp32">fp32</option>
+                </select>
+                  <svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5"/></svg>
+                </div>
+              </div>
+              <div class="field">
+                <label for="upload">Or use your own</label>
+                <label class="drop" for="upload">
+                  <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M10 14V4m0 0L6.5 7.5M10 4l3.5 3.5"/>
+                    <path d="M3.5 13v2.5A1.5 1.5 0 0 0 5 17h10a1.5 1.5 0 0 0 1.5-1.5V13"/>
+                  </svg>
+                  <span>Choose an image</span>
+                  <input type="file" id="upload" accept="image/*">
+                </label>
+                <button class="linkish" id="clearup" hidden>Back to a benchmark tile</button>
+              </div>
+              <div class="field">
+                <label>Models <span class="count" id="chipcount"></span></label>
+                <div class="chips" id="chips"></div>
+              </div>
+              <div id="tilebox"></div>
+              <p class="note" id="tilenote" style="margin:0;font-size:.78rem"></p>
+            </div>
+
+            <div>
+              <div class="runbar">
+                <span class="status" id="status">Idle</span>
+                <button class="btn btn-primary" id="rerun">Re-time</button>
+              </div>
+              <div class="bar"><i id="progress"></i></div>
+              <div id="results" style="margin-top:1.2rem">
+                <div class="empty">Select at least one model.</div>
+              </div>
+              <p class="note" id="caption"></p>
+              <p class="note diag" id="diag"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cards" style="margin-top:clamp(44px,6vh,72px)">
+        <div class="card"><h3 class="h3">Why the browser is slower</h3>
+          <p>These graphs run through WebAssembly here, which is several times
+             slower than the native runtime the benchmark used. The millisecond
+             column is honestly measured on your machine; it is not the
+             benchmark's latency, and the two are labelled separately
+             everywhere they appear.</p></div>
+        <div class="card"><h3 class="h3">Watch quantisation fail</h3>
+          <p>Switch precision to fp32 and back on MobileNetV3-Small. Its int8
+             form is the one post-training quantisation destroyed, and it will
+             cheerfully give you a confident wrong answer faster than any other
+             model on the page.</p></div>
+      </div>
+    </div>
+  </section>
+  <section style="padding-top:0">
+    <div class="wrap wide">
+      <div class="band">
+        <h3 class="h3">What you are actually running</h3>
+        <p>These are the benchmark's own exported graphs, not a re-implementation
+          and not a server call. Your browser downloads each one, builds a
+          session, runs it on the tile and releases it again. The accuracy and
+          energy columns come from the committed measurements on an Apple M2;
+          only the millisecond column is yours.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="index.html">
+        <svg class="mark" viewBox="0 0 26 20" aria-hidden="true">
+          <path d="M1 18C5 18 6 12.4 11 12.4S17.2 18 25 18"/>
+          <path d="M4.2 13.4C7 13.4 8.2 8.4 12 8.4S17 13.4 21.8 13.4"/>
+          <path d="M7.4 8.8C9.2 8.8 10.2 5 13 5S16.8 8.8 18.6 8.8"/>
+          <circle class="pin" cx="13" cy="2.2" r="1.5"/>
+        </svg>
+        <span>TerraScope</span>
+      </a>
+      <nav class="flinks">
+        <a href="demo.html">Demo</a>
+        <a href="trade-offs.html">Trade-offs</a>
+        <a href="method.html">Method</a>
+        <a href="https://github.com/eklavya072/TerraScope-GeoSpatial-AI">Repository</a>
+        <a href="https://github.com/phelber/eurosat">EuroSAT, MIT</a>
+        <a href="https://www.pexels.com/video/aerial-view-of-tropical-waterfall-in-lush-jungle-37277807/">Footage</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<!-- Pinned to 1.18.0, and to the wasm-only bundle, for one reason: 1.18.0 is
+     the last release that ships a NON-THREADED WebAssembly binary
+     (ort-wasm-simd.wasm). From 1.18.1 onward only *-threaded.wasm exists, and
+     a threaded module asks for shared memory with a large maximum even when
+     numThreads is 1. Browsers that decline that allocation -- Safari, and any
+     context that is not cross-origin isolated -- fail every model with
+     "no available backend found. ERR: [wasm] RangeError: Out of memory",
+     regardless of how small the model is.
+
+     1.18.0 was verified against 1.19.2 on all five graphs: identical
+     predictions and identical confidences, so this costs nothing. -->
+<!-- Served from this origin, not a CDN. onnxruntime-web and its WebAssembly
+     binaries used to load from jsdelivr, which fails closed: plenty of
+     government and corporate networks block public CDNs outright, and when the
+     script did not arrive `ort` was simply undefined and the demo stopped with
+     no explanation. A benchmark aimed at ministry hardware should not assume
+     the ministry's network can reach a CDN. Vendored files also cannot drift:
+     the version below is the one these numbers were produced with. -->
+<script src="vendor/ort/ort.wasm.min.js"></script>
+<script>
+  /* Configured before any session exists: once the runtime has initialised
+     its environment these are ignored. Single-threaded because the page is
+     not cross-origin isolated (no SharedArrayBuffer), and because the
+     benchmark itself reports single-thread numbers. */
+  if (window.ort && ort.env && ort.env.wasm) {
+    ort.env.wasm.wasmPaths = 'vendor/ort/';
+    ort.env.wasm.numThreads = 1;
+    ort.env.wasm.simd = true;
+    ort.env.wasm.proxy = false;
+  } else {
+    /* The runtime did not load. Say so where the results would have been,
+       rather than leaving a dead button: a blank panel reads as a broken
+       page, and the visitor has no way to tell that inference was never
+       attempted. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var box = document.getElementById('results');
+      if (box) {
+        box.innerHTML = '<div class="empty">The inference runtime did not ' +
+          'load, so nothing can be timed on this page. Every measured figure ' +
+          'in the tables and on the other pages is unaffected \u2014 those ' +
+          'come from the committed benchmark, not from your browser.</div>';
+      }
+      var b = document.getElementById('rerun');
+      if (b) { b.disabled = true; }
+    });
+  }
+</script>
+<script src="assets/site.js"></script>
+<script src="assets/demo.js"></script>
+</body>
+</html>

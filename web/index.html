@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TerraScope — the energy cost of a land-cover answer</title>
+<meta name="description" content="Five architectures trained on one recipe on EuroSAT. Accuracy separates them by 1.25 points. Energy separates them by nineteen times. A reproducible accuracy-versus-energy benchmark for CPU-only inference.">
+<meta property="og:title" content="TerraScope — the energy cost of a land-cover answer">
+<meta property="og:description" content="On CPU-only hardware, deployment is an energy decision, not an accuracy one.">
+<meta property="og:image" content="assets/valley.jpg">
+<link rel="preload" as="image" href="assets/ridge-poster.jpg">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/hero.css">
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <a class="brand" href="index.html">
+    <svg class="mark" viewBox="0 0 26 20" aria-hidden="true">
+      <path d="M1 18C5 18 6 12.4 11 12.4S17.2 18 25 18"/>
+      <path d="M4.2 13.4C7 13.4 8.2 8.4 12 8.4S17 13.4 21.8 13.4"/>
+      <path d="M7.4 8.8C9.2 8.8 10.2 5 13 5S16.8 8.8 18.6 8.8"/>
+      <circle class="pin" cx="13" cy="2.2" r="1.5"/>
+    </svg>
+    <span>TerraScope</span>
+  </a>
+  <div class="nav-links" id="navlinks">
+    <span class="nav-pill" id="navpill"></span>
+    <a href="index.html">Story</a>
+    <a href="trade-offs.html">Trade-offs</a>
+    <a href="method.html">Method</a>
+  </div>
+  <div class="nav-right">
+    <span class="readout" title="Energy spread between configurations of statistically equal accuracy">
+      <em>&#916; energy</em><b id="nav-fig">&#8212;</b>
+    </span>
+    <a class="btn btn-primary" href="demo.html">Run a model</a>
+  </div>
+  <i class="nav-prog" id="navprog"></i>
+</nav>
+
+<!-- ======================== the scroll journey ========================
+     Six beats. The frame descends from above the ridge into the trees as the
+     argument descends from the problem into the evidence, and the drive that
+     started it lands on the last of the footage.
+     ==================================================================== -->
+<div id="track">
+  <div class="stage">
+    <div class="poster" id="poster"></div>
+    <video id="hero" playsinline muted preload="auto"
+           poster="assets/ridge-poster.jpg" hidden></video>
+    <div class="scrim"></div>
+    <i class="wedge" id="wedge"></i>
+    <div class="ring" id="ring">Loading the ridge</div>
+
+    <div class="beats" id="beats">
+
+      <!-- Five beats. Each states one thing and hands off to the next; the
+           opening says what was built rather than posing a riddle. -->
+
+      <!-- 1. what this is -->
+      <div class="beat b0" data-sx="22%" data-sy="72%">
+        <h1 class="anim">We weighed <em>fifteen</em> ways to read
+            the same satellite tile.</h1>
+        <p>Five architectures, three numeric precisions, one training recipe,
+           ten classes of land cover. Then we measured what each answer costs
+           in <em>joules</em> — the number model cards never print.</p>
+      </div>
+
+      <!-- 2. why it matters -->
+      <div class="beat b1" data-sx="24%" data-sy="28%">
+        <span class="k">The problem</span>
+        <h2 class="anim">Training is a bill you pay <em>once</em>.</h2>
+        <p>Inference is a subscription. A deployed land-cover model runs until
+           it is replaced, on someone else's CPU, long after the paper. Almost
+           nobody measures that, so nobody optimises it.</p>
+      </div>
+
+      <!-- 3. why accuracy could not answer it -->
+      <div class="beat b2" data-sx="76%" data-sy="50%">
+        <span class="k">Why it needed measuring</span>
+        <h2 class="anim">Accuracy had stopped telling them apart.</h2>
+        <p>Under one recipe and no per-model tuning, all five finish within a
+           hair of each other. On a dataset this saturated, choosing by
+           accuracy is choosing by noise.</p>
+        <span class="inline-fig" data-count="1.25" data-dec="2"
+              data-suffix=" pp total spread">0</span>
+      </div>
+
+      <!-- 4. the payoff -->
+      <div class="beat b3" data-sx="26%" data-sy="50%">
+        <span class="k">What it changed</span>
+        <h2 class="anim">Same answer.<br>
+            <span class="num" data-count="19" data-suffix="×"
+                  id="ratio-headline">0</span> the electricity.</h2>
+        <p>Three joules per thousand tiles against sixty-one. The deployment
+           decision was never about accuracy — it was about the number nobody
+           had bothered to publish.</p>
+      </div>
+
+      <!-- 5. the drive, over the last of the footage -->
+      <div class="beat b4 wide" data-sx="50%" data-sy="62%">
+        <span class="k">The drive</span>
+        <h2 class="anim">Green AI is a measurement problem<br>
+            before it is an engineering one.</h2>
+        <p>Nothing here needed a new architecture. It needed weighing the ones
+           we already have, on the hardware they actually run on, and
+           publishing the result whole.</p>
+        <div class="figs">
+          <div class="fig key"><b data-count="19" data-suffix="×" id="stat-ratio">0</b>
+            <span>Energy spread at equal accuracy</span></div>
+          <div class="fig"><b data-count="0.67" data-dec="2" data-suffix=" pp" id="stat-gap">0</b>
+            <span>Accuracy given up</span></div>
+          <div class="fig"><b data-count="300" id="stat-windows">0</b>
+            <span>Timed measurement windows</span></div>
+          <div class="fig"><b data-count="82" id="stat-tests">0</b>
+            <span>Tests over the artefacts</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- Static hero: phones, reduced motion, and no JavaScript. -->
+<header class="static-hero">
+  <div class="poster"></div><div class="scrim"></div>
+  <div class="wrap inner">
+    <h1 class="display">Same answer.<br>19× the electricity.</h1>
+    <p class="lede">Five architectures, one training recipe, ten classes of land
+       cover seen from orbit. Accuracy separates them by 1.25 points. Energy
+       separates them by nineteen times.</p>
+    <p style="margin-top:2rem"><a class="btn btn-primary" href="demo.html">Run a model</a></p>
+  </div>
+</header>
+
+<main class="page" style="padding-top:0">
+
+  <!-- On phones the journey becomes chapters, so the story still gets told. -->
+  <section class="chapters">
+    <div class="wrap">
+      <div class="chapter"><h2>A model is trained once, then run forever.</h2>
+        <p>Training is a bill you pay one time. Inference is a subscription, and
+           almost no model card prints the price.</p></div>
+      <div class="chapter"><h2>Accuracy had stopped telling the models apart.</h2>
+        <p>Under one identical recipe, five architectures land within 1.25 points
+           of each other. Choosing by accuracy is choosing by noise.</p></div>
+      <div class="chapter"><h2>So we measured the other axis.</h2>
+        <p>Five seeds each, three precisions, one machine, CPU runtime only,
+           power sampled off the die during every timed window.</p></div>
+      <div class="chapter"><h2>Same accuracy, nineteen times the energy.</h2>
+        <p>3.18 joules per thousand tiles against 60.84. The cheap model gives up
+           two thirds of one accuracy point to do it.</p></div>
+    </div>
+  </section>
+
+  <!-- ============================ the finding =========================
+       Fifteen configurations were measured, not two. The panel names the two
+       ends of the range and shows what each one actually costs, because the
+       ratio on its own says nothing about what you give up to get it.
+       ================================================================== -->
+  <section id="finding">
+    <div class="wrap">
+      <div class="statement">
+        <h2 class="h scrub">Fifteen configurations. One answer. Nineteen times the bill.</h2>
+        <p class="lede rise">Five architectures, three numeric precisions. Put the
+          cheapest and the dearest in front of the same thousand tiles and they
+          differ on about seven of them.</p>
+      </div>
+
+      <div class="versus rise" id="versus">
+        <table class="vs">
+          <thead>
+            <tr>
+              <th class="rowhead"><span class="vs-cap">Measured on one Apple M2</span></th>
+              <th><b>EfficientNet-Lite0</b><span>static int8</span></th>
+              <th><b>ResNet-50</b><span>fp32 baseline</span></th>
+              <th class="delta-col">Difference</th>
+            </tr>
+          </thead>
+          <tbody id="vs-body">
+            <tr><th>Energy per 1,000 tiles</th>
+              <td class="num win">3.18 J</td><td class="num">60.84 J</td>
+              <td class="num delta">19× less</td></tr>
+            <tr><th>Top-1 accuracy</th>
+              <td class="num">97.45%</td><td class="num win">98.12%</td>
+              <td class="num delta cost">0.67 pp worse</td></tr>
+            <tr><th>Latency, 95th percentile</th>
+              <td class="num win">0.43 ms</td><td class="num">12.24 ms</td>
+              <td class="num delta">29× faster</td></tr>
+            <tr><th>Model on disk</th>
+              <td class="num win">3.8 MB</td><td class="num">94.0 MB</td>
+              <td class="num delta">25× smaller</td></tr>
+          </tbody>
+        </table>
+        <p class="vs-foot">Accuracy is a mean over five seeds. Energy is sampled
+          from on-die telemetry during each timed window.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== why ============================== -->
+  <section class="warm">
+    <div class="wrap">
+      <div class="lead-in">
+        <h2 class="h reveal">Nobody prints the joules.</h2>
+        <p class="lede rise">Model cards report accuracy to two decimal places
+          and say nothing about power. The field buys tenths of a point with
+          electricity it never counts.</p>
+      </div>
+      <div class="cards">
+        <div class="card rise"><h3 class="h3">Inference is the part that repeats</h3>
+          <p>Training happens once. A deployed land-cover model runs until it is
+            replaced. At a million tiles a month, the two configurations above
+            differ by <strong>7.7 grams of CO₂e per million</strong> — 0.42
+            against 8.13, on a world-average grid of 481 gCO₂e/kWh.</p></div>
+        <div class="card rise"><h3 class="h3">CPU is where most of it happens</h3>
+          <p>Earth-observation pipelines run on whatever is available, which is
+            usually a CPU without a GPU beside it. Every figure here is measured
+            through the ONNX CPU runtime on one Apple M2, single-threaded.</p></div>
+        <div class="card rise"><h3 class="h3">The tiles stay 64 pixels</h3>
+          <p>EuroSAT is natively 64×64. Upscaling to the backbones' 224×224
+            pretrain size costs roughly twelve times the CPU work and adds no
+            information — and CPU work is the quantity under test.</p></div>
+        <div class="card rise"><h3 class="h3">One recipe, no favourites</h3>
+          <p>Same optimiser, same twenty epochs, same augmentation, same
+            learning rate for all five architectures. If a model does badly
+            under a fixed budget, that is a finding about the model, not a
+            reason to tune it until it wins.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ findings =========================== -->
+  <section id="findings">
+    <div class="wrap">
+      <h2 class="h reveal">Four results worth the electricity.</h2>
+      <p class="lede rise">Every figure is read at page load from the committed
+        benchmark. None was typed into this page.</p>
+
+      <div class="bento">
+        <div class="cell lead rise">
+          <span class="big mono" id="find-ratio">19×</span>
+          <h3 class="h3">The gap that should decide the deployment</h3>
+          <p id="find-ratio-body">EfficientNet-Lite0 in static int8 costs 0.67
+            points against the ResNet-50 baseline and runs on a nineteenth of
+            the energy, at 29 times lower p95 latency.</p>
+        </div>
+
+        <div class="cell tall rise">
+          <span class="mid mono" id="find-cliff">-64.66 pp</span>
+          <h3 class="h3">Quantisation is not a free lunch</h3>
+          <p>The same post-training recipe is free on one architecture and
+            destroys another. Watch it happen in the demo.</p>
+        </div>
+
+        <div class="cell half rise">
+          <h3 class="h3">Dynamic int8 loses on both axes at once</h3>
+          <p>Worse accuracy <em>and</em> worse energy than plain fp32, for every
+            model measured. A negative result, published because it saves the
+            next person the experiment.</p>
+        </div>
+
+        <div class="cell half rise">
+          <h3 class="h3">Energy is mostly latency — but not only</h3>
+          <p>The two track each other at r = 0.983. The residual runs against
+            intuition: quantised models finish sooner while drawing more power
+            per second than the models they replace.</p>
+        </div>
+      </div>
+
+      <div class="mosaic" id="mosaic"></div>
+      <p class="note">Twenty tiles from the held-out test fold — the exact images
+        the demo classifies.</p>
+    </div>
+  </section>
+
+  <!-- ============================== cta ============================== -->
+  <section class="closing">
+    <div class="closing-art" role="img"
+         aria-label="Forested tropical mountain ridges under cloud"></div>
+    <div class="closing-veil"></div>
+    <div class="wrap closing-copy">
+      <h2 class="h">Don't take the numbers. Run the models.</h2>
+      <p class="lede">The demo downloads the benchmark's own ONNX graphs and runs
+        them in your browser, on your machine, on tiles the models never trained
+        on. Nothing is uploaded. Watch MobileNetV3-Small get it wrong — faster
+        than anything else on the page.</p>
+      <p class="closing-actions">
+        <a class="btn btn-primary" href="demo.html">Open the demo</a>
+        <a class="btn btn-ghost" href="method.html">How it was measured</a>
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="index.html">
+        <svg class="mark" viewBox="0 0 26 20" aria-hidden="true">
+          <path d="M1 18C5 18 6 12.4 11 12.4S17.2 18 25 18"/>
+          <path d="M4.2 13.4C7 13.4 8.2 8.4 12 8.4S17 13.4 21.8 13.4"/>
+          <path d="M7.4 8.8C9.2 8.8 10.2 5 13 5S16.8 8.8 18.6 8.8"/>
+          <circle class="pin" cx="13" cy="2.2" r="1.5"/>
+        </svg>
+        <span>TerraScope</span>
+      </a>
+      <nav class="flinks">
+        <a href="demo.html">Demo</a>
+        <a href="trade-offs.html">Trade-offs</a>
+        <a href="method.html">Method</a>
+        <a href="https://github.com/eklavya072/TerraScope-GeoSpatial-AI">Repository</a>
+        <a href="https://github.com/phelber/eurosat">EuroSAT, MIT</a>
+        <a href="https://www.pexels.com/video/aerial-view-of-tropical-waterfall-in-lush-jungle-37277807/">Footage</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+<script src="assets/hero.js"></script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+{
+ "classes": [
+  "AnnualCrop",
+  "Forest",
+  "HerbaceousVegetation",
+  "Highway",
+  "Industrial",
+  "Pasture",
+  "PermanentCrop",
+  "Residential",
+  "River",
+  "SeaLake"
+ ],
+ "finding": {
+  "ratio": 19.152962511313817,
+  "gap": 0.9037037037036955,
+  "gap_vs_dearest": 0.6666666666666599,
+  "spread": 1.2518518518518533,
+  "architectures": 5,
+  "seeds": 5,
+  "cheapest": {
+   "model": "efficientnet_lite0",
+   "precision": "int8_static",
+   "label": "efficientnet_lite0 int8_static",
+   "accuracy": 97.45185185185186,
+   "accuracy_ci": 0.3242041122732141,
+   "energy": 3.1762750529014374,
+   "p95": 0.4260582005372271,
+   "size_mb": 3.808969,
+   "co2e_per_1m": 0.42438563901266424
+  },
+  "dearest": {
+   "model": "resnet50",
+   "precision": "fp32",
+   "label": "resnet50 fp32",
+   "accuracy": 98.11851851851851,
+   "accuracy_ci": 0.3022610580703381,
+   "energy": 60.835077013842536,
+   "p95": 12.24283890798688,
+   "size_mb": 94.032201,
+   "co2e_per_1m": 8.128242234349516
+  },
+  "best": {
+   "model": "mobilevit_s",
+   "precision": "fp32",
+   "label": "mobilevit_s fp32",
+   "accuracy": 98.35555555555555,
+   "accuracy_ci": 0.43941584544130113,
+   "energy": 26.30577122865724,
+   "p95": 4.460683372744825,
+   "size_mb": 19.957406,
+   "co2e_per_1m": 3.5147433224955917
+  },
+  "near_equal": [
+   {
+    "model": "efficientnet_lite0",
+    "precision": "int8_static",
+    "label": "efficientnet_lite0 int8_static",
+    "accuracy": 97.45185185185186,
+    "accuracy_ci": 0.3242041122732141,
+    "energy": 3.1762750529014374,
+    "p95": 0.4260582005372271,
+    "size_mb": 3.808969,
+    "co2e_per_1m": 0.42438563901266424
+   },
+   {
+    "model": "efficientnet_lite0",
+    "precision": "fp32",
+    "label": "efficientnet_lite0 fp32",
+    "accuracy": 97.6074074074074,
+    "accuracy_ci": 0.1284362527749886,
+    "energy": 19.28161529886254,
+    "p95": 3.737175516143907,
+    "size_mb": 13.487309,
+    "co2e_per_1m": 2.576238044098022
+   },
+   {
+    "model": "mobilevit_s",
+    "precision": "fp32",
+    "label": "mobilevit_s fp32",
+    "accuracy": 98.35555555555555,
+    "accuracy_ci": 0.43941584544130113,
+    "energy": 26.30577122865724,
+    "p95": 4.460683372744825,
+    "size_mb": 19.957406,
+    "co2e_per_1m": 3.5147433224955917
+   },
+   {
+    "model": "resnet50",
+    "precision": "fp32",
+    "label": "resnet50 fp32",
+    "accuracy": 98.11851851851851,
+    "accuracy_ci": 0.3022610580703381,
+    "energy": 60.835077013842536,
+    "p95": 12.24283890798688,
+    "size_mb": 94.032201,
+    "co2e_per_1m": 8.128242234349516
+   }
+  ],
+  "latency_ratio": 28.7351326474871,
+  "size_ratio": 24.687048122470937
+ },
+ "configs": [
+  {
+   "model": "efficientnet_lite0",
+   "precision": "fp32",
+   "label": "efficientnet_lite0 fp32",
+   "accuracy": 97.6074074074074,
+   "accuracy_ci": 0.1284362527749886,
+   "energy": 19.28161529886254,
+   "p95": 3.737175516143907,
+   "size_mb": 13.487309,
+   "co2e_per_1m": 2.576238044098022
+  },
+  {
+   "model": "efficientnet_lite0",
+   "precision": "int8_dynamic",
+   "label": "efficientnet_lite0 int8_dynamic",
+   "accuracy": 63.43703703703704,
+   "accuracy_ci": 3.974053928173353,
+   "energy": 25.74661161997009,
+   "p95": 4.434316704573575,
+   "size_mb": 3.560121,
+   "co2e_per_1m": 3.440033385890448
+  },
+  {
+   "model": "efficientnet_lite0",
+   "precision": "int8_static",
+   "label": "efficientnet_lite0 int8_static",
+   "accuracy": 97.45185185185186,
+   "accuracy_ci": 0.3242041122732141,
+   "energy": 3.1762750529014374,
+   "p95": 0.4260582005372271,
+   "size_mb": 3.808969,
+   "co2e_per_1m": 0.42438563901266424
+  },
+  {
+   "model": "mobilenetv3_large",
+   "precision": "fp32",
+   "label": "mobilenetv3_large fp32",
+   "accuracy": 97.1037037037037,
+   "accuracy_ci": 0.16708108639252145,
+   "energy": 14.46249958478424,
+   "p95": 2.725850451970473,
+   "size_mb": 16.846529,
+   "co2e_per_1m": 1.9323506389670055
+  },
+  {
+   "model": "mobilenetv3_large",
+   "precision": "int8_dynamic",
+   "label": "mobilenetv3_large int8_dynamic",
+   "accuracy": 70.47407407407408,
+   "accuracy_ci": 8.10284545781886,
+   "energy": 19.320526486758673,
+   "p95": 2.8838639144669287,
+   "size_mb": 4.419962,
+   "co2e_per_1m": 2.581437011147478
+  },
+  {
+   "model": "mobilenetv3_large",
+   "precision": "int8_static",
+   "label": "mobilenetv3_large int8_static",
+   "accuracy": 91.0962962962963,
+   "accuracy_ci": 1.109244242799794,
+   "energy": 3.59836933313886,
+   "p95": 0.5246772666578181,
+   "size_mb": 4.705294,
+   "co2e_per_1m": 0.480782124788831
+  },
+  {
+   "model": "mobilenetv3_small",
+   "precision": "fp32",
+   "label": "mobilenetv3_small fp32",
+   "accuracy": 97.19259259259259,
+   "accuracy_ci": 0.09969864453103505,
+   "energy": 6.974002557378912,
+   "p95": 1.395860499178525,
+   "size_mb": 6.119727,
+   "co2e_per_1m": 0.931804230583127
+  },
+  {
+   "model": "mobilenetv3_small",
+   "precision": "int8_dynamic",
+   "label": "mobilenetv3_small int8_dynamic",
+   "accuracy": 14.570370370370373,
+   "accuracy_ci": 2.9479780730745166,
+   "energy": 8.022097343743393,
+   "p95": 1.5412400860805064,
+   "size_mb": 1.690277,
+   "co2e_per_1m": 1.0718413395390478
+  },
+  {
+   "model": "mobilenetv3_small",
+   "precision": "int8_static",
+   "label": "mobilenetv3_small int8_static",
+   "accuracy": 32.53333333333333,
+   "accuracy_ci": 10.402828246734769,
+   "energy": 1.7212168563844674,
+   "p95": 0.3226982901105657,
+   "size_mb": 1.864284,
+   "co2e_per_1m": 0.2299736966447025
+  },
+  {
+   "model": "mobilevit_s",
+   "precision": "fp32",
+   "label": "mobilevit_s fp32",
+   "accuracy": 98.35555555555555,
+   "accuracy_ci": 0.43941584544130113,
+   "energy": 26.30577122865724,
+   "p95": 4.460683372744825,
+   "size_mb": 19.957406,
+   "co2e_per_1m": 3.5147433224955917
+  },
+  {
+   "model": "mobilevit_s",
+   "precision": "int8_dynamic",
+   "label": "mobilevit_s int8_dynamic",
+   "accuracy": 58.41481481481481,
+   "accuracy_ci": 10.824546473663883,
+   "energy": 24.52773734951614,
+   "p95": 3.910008652601391,
+   "size_mb": 5.495663,
+   "co2e_per_1m": 3.277178240310351
+  },
+  {
+   "model": "mobilevit_s",
+   "precision": "int8_static",
+   "label": "mobilevit_s int8_static",
+   "accuracy": 49.4962962962963,
+   "accuracy_ci": 9.132704757890567,
+   "energy": 13.769832470211023,
+   "p95": 2.1076465232181363,
+   "size_mb": 5.820157,
+   "co2e_per_1m": 1.8398026161587506
+  },
+  {
+   "model": "resnet50",
+   "precision": "fp32",
+   "label": "resnet50 fp32",
+   "accuracy": 98.11851851851851,
+   "accuracy_ci": 0.3022610580703381,
+   "energy": 60.835077013842536,
+   "p95": 12.24283890798688,
+   "size_mb": 94.032201,
+   "co2e_per_1m": 8.128242234349516
+  },
+  {
+   "model": "resnet50",
+   "precision": "int8_dynamic",
+   "label": "resnet50 int8_dynamic",
+   "accuracy": 80.4888888888889,
+   "accuracy_ci": 8.145731969652473,
+   "energy": 27.080982038599217,
+   "p95": 5.362184437690303,
+   "size_mb": 23.692785,
+   "co2e_per_1m": 3.618320100157284
+  },
+  {
+   "model": "resnet50",
+   "precision": "int8_static",
+   "label": "resnet50 int8_static",
+   "accuracy": 97.22222222222221,
+   "accuracy_ci": 0.38338289028074934,
+   "energy": 14.39356476194455,
+   "p95": 2.4883878519176506,
+   "size_mb": 24.035678,
+   "co2e_per_1m": 1.923140180693147
+  }
+ ],
+ "quantisation": {
+  "efficientnet_lite0|int8_dynamic": {
+   "fp32": 97.6074074074074,
+   "int8": 63.43703703703704,
+   "delta": -34.17037037037037,
+   "half_width": 4.073417655701635
+  },
+  "efficientnet_lite0|int8_static": {
+   "fp32": 97.6074074074074,
+   "int8": 97.45185185185186,
+   "delta": -0.15555555555555545,
+   "half_width": 0.2285539868793635
+  },
+  "mobilenetv3_large|int8_dynamic": {
+   "fp32": 97.1037037037037,
+   "int8": 70.47407407407408,
+   "delta": -26.629629629629626,
+   "half_width": 8.118659769710536
+  },
+  "mobilenetv3_large|int8_static": {
+   "fp32": 97.1037037037037,
+   "int8": 91.0962962962963,
+   "delta": -6.007407407407406,
+   "half_width": 1.0831021247520356
+  },
+  "mobilenetv3_small|int8_dynamic": {
+   "fp32": 97.19259259259259,
+   "int8": 14.570370370370373,
+   "delta": -82.62222222222222,
+   "half_width": 2.924352956515602
+  },
+  "mobilenetv3_small|int8_static": {
+   "fp32": 97.19259259259259,
+   "int8": 32.53333333333333,
+   "delta": -64.65925925925926,
+   "half_width": 10.342109443353046
+  },
+  "mobilevit_s|int8_dynamic": {
+   "fp32": 98.35555555555555,
+   "int8": 58.41481481481481,
+   "delta": -39.94074074074074,
+   "half_width": 11.180727679317801
+  },
+  "mobilevit_s|int8_static": {
+   "fp32": 98.35555555555555,
+   "int8": 49.4962962962963,
+   "delta": -48.85925925925926,
+   "half_width": 9.282619686867147
+  },
+  "resnet50|int8_dynamic": {
+   "fp32": 98.11851851851851,
+   "int8": 80.4888888888889,
+   "delta": -17.62962962962963,
+   "half_width": 7.891992449971208
+  },
+  "resnet50|int8_static": {
+   "fp32": 98.11851851851851,
+   "int8": 97.22222222222221,
+   "delta": -0.8962962962962973,
+   "half_width": 0.5041880623683475
+  }
+ },
+ "exclusions": {
+  "excluded": 4,
+  "total": 300,
+  "windows": [
+   {
+    "batch_size": 1,
+    "model": "resnet50",
+    "precision": "int8_dynamic",
+    "reasons": [
+     "p95/p50 = 1.65 > 1.5 (contention)"
+    ],
+    "seed": 0,
+    "threads_intra_op": 4
+   },
+   {
+    "batch_size": 1,
+    "model": "mobilevit_s",
+    "precision": "fp32",
+    "reasons": [
+     "p95/p50 = 1.64 > 1.5 (contention)"
+    ],
+    "seed": 0,
+    "threads_intra_op": 4
+   },
+   {
+    "batch_size": 32,
+    "model": "mobilevit_s",
+    "precision": "int8_static",
+    "reasons": [
+     "energy coverage 0.948 < 0.95"
+    ],
+    "seed": 3,
+    "threads_intra_op": 4
+   },
+   {
+    "batch_size": 32,
+    "model": "mobilevit_s",
+    "precision": "fp32",
+    "reasons": [
+     "energy coverage 0.949 < 0.95"
+    ],
+    "seed": 4,
+    "threads_intra_op": 1
+   }
+  ]
+ },
+ "provenance": {
+  "split_sha256": "b77443792ba4b11439ed220b3dea699ce61e48e0a0af49c51fb6a8cf43b0595d",
+  "recipe_hash": "746abf440ef1",
+  "grid_intensity": 481.0,
+  "grid_intensity_source": "world average grid carbon intensity, ~481 gCO2e/kWh; substitute your own grid's figure -- national values range from under 50 (hydro/nuclear-heavy) to over 700 (coal-heavy), and this constant scales every CO2e number reported here linearly",
+  "energy_note": "Energy is ESTIMATED from Apple Silicon on-die CPU package power telemetry sampled by powermetrics and integrated over each timed window. It excludes DRAM, display and PSU losses, and is not a wall-socket measurement.",
+  "environment": {
+   "cpu": "Apple M2",
+   "cpu_cores_logical": "8",
+   "os": "Darwin 23.6.0 (Darwin Kernel Version 23.6.0)",
+   "python": "3.12.11",
+   "onnxruntime": "1.29.0",
+   "timestamp_utc": "2026-09-01T17:09:50+00:00"
+  },
+  "confound": {
+   "t1": {
+    "bimodal": false,
+    "low_power_rows": 149,
+    "minority_fraction": 0.007,
+    "note": "Single power regime; no core-placement confound detected.",
+    "per_model": {
+     "efficientnet_lite0": {
+      "low_power_rows": 30,
+      "rows": 30
+     },
+     "mobilenetv3_large": {
+      "low_power_rows": 29,
+      "rows": 30
+     },
+     "mobilenetv3_small": {
+      "low_power_rows": 30,
+      "rows": 30
+     },
+     "mobilevit_s": {
+      "low_power_rows": 30,
+      "rows": 30
+     },
+     "resnet50": {
+      "low_power_rows": 30,
+      "rows": 30
+     }
+    },
+    "regime_threshold_w": 10.0,
+    "rows": 150
+   },
+   "t4": {
+    "bimodal": true,
+    "low_power_rows": 53,
+    "minority_fraction": 0.353,
+    "note": "Rows split across two power regimes correlated with position in the session rather than with model identity; cross-model energy comparisons within this thread count are confounded.",
+    "per_model": {
+     "efficientnet_lite0": {
+      "low_power_rows": 0,
+      "rows": 30
+     },
+     "mobilenetv3_large": {
+      "low_power_rows": 0,
+      "rows": 30
+     },
+     "mobilenetv3_small": {
+      "low_power_rows": 27,
+      "rows": 30
+     },
+     "mobilevit_s": {
+      "low_power_rows": 0,
+      "rows": 30
+     },
+     "resnet50": {
+      "low_power_rows": 26,
+      "rows": 30
+     }
+    },
+    "regime_threshold_w": 10.0,
+    "rows": 150
+   }
+  }
+ },
+ "tiles": [
+  {
+   "file": "SeaLake_1857.png",
+   "label": "SeaLake",
+   "split_path": "SeaLake/SeaLake_1857.jpg",
+   "answers": 4,
+   "wrong": 4
+  },
+  {
+   "file": "Forest_2059.png",
+   "label": "Forest",
+   "split_path": "Forest/Forest_2059.jpg",
+   "answers": 4,
+   "wrong": 4
+  },
+  {
+   "file": "Industrial_19.png",
+   "label": "Industrial",
+   "split_path": "Industrial/Industrial_19.jpg",
+   "answers": 3,
+   "wrong": 4
+  },
+  {
+   "file": "River_2274.png",
+   "label": "River",
+   "split_path": "River/River_2274.jpg",
+   "answers": 3,
+   "wrong": 3
+  },
+  {
+   "file": "HerbaceousVegetation_1098.png",
+   "label": "HerbaceousVegetation",
+   "split_path": "HerbaceousVegetation/HerbaceousVegetation_1098.jpg",
+   "answers": 3,
+   "wrong": 3
+  },
+  {
+   "file": "Pasture_733.png",
+   "label": "Pasture",
+   "split_path": "Pasture/Pasture_733.jpg",
+   "answers": 3,
+   "wrong": 2
+  },
+  {
+   "file": "PermanentCrop_2125.png",
+   "label": "PermanentCrop",
+   "split_path": "PermanentCrop/PermanentCrop_2125.jpg",
+   "answers": 3,
+   "wrong": 2
+  },
+  {
+   "file": "Residential_2618.png",
+   "label": "Residential",
+   "split_path": "Residential/Residential_2618.jpg",
+   "answers": 3,
+   "wrong": 2
+  },
+  {
+   "file": "Highway_1979.png",
+   "label": "Highway",
+   "split_path": "Highway/Highway_1979.jpg",
+   "answers": 3,
+   "wrong": 2
+  },
+  {
+   "file": "River_1475.png",
+   "label": "River",
+   "split_path": "River/River_1475.jpg",
+   "answers": 1,
+   "wrong": 0
+  },
+  {
+   "file": "Industrial_1992.png",
+   "label": "Industrial",
+   "split_path": "Industrial/Industrial_1992.jpg",
+   "answers": 1,
+   "wrong": 0
+  },
+  {
+   "file": "Industrial_2363.png",
+   "label": "Industrial",
+   "split_path": "Industrial/Industrial_2363.jpg",
+   "answers": 1,
+   "wrong": 0
+  }
+ ]
+}

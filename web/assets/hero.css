@@ -1,0 +1,215 @@
+/* The scroll journey.
+   =========================================================================
+   Six beats. Each lands in a different part of the frame and arrives by a
+   different mechanism, so the sequence reads as a film rather than as one
+   caption box being refilled six times.
+
+   The entrance state lives on the word spans, never on the beat, and every
+   animated property is re-declared in the `.on` rule at higher specificity.
+   The previous version set blur on the block and cleared it from a rule of
+   equal specificity declared earlier in the file, so the third beat stayed
+   blurred for the whole of its turn on screen.
+   ========================================================================= */
+
+/* The journey is a dark band on a light page: it has to say so, or the
+   headings inherit the page's ink and vanish into the trees. */
+#track{position:relative;color:var(--bone);--nav-ink:var(--bone)}
+/* vh first, svh second: a Safari that does not know svh keeps the vh value
+   instead of dropping the declaration and collapsing the stage to nothing. */
+.stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;
+  background:var(--forest-deep)}
+/* No CSS filter on the video. A filtered element is promoted to its own
+   composited layer, and the compositor may rasterise that layer at CSS
+   resolution rather than device resolution — on a 2x display that throws away
+   half the detail of a 4K source before it reaches the screen. The grade is
+   baked into the encode instead, where it costs nothing. */
+.stage video,.stage .poster{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;display:block}
+.stage .poster{background:url('ridge-poster.jpg') center/cover no-repeat;
+  transition:opacity .6s ease}
+/* Light enough to keep the footage the brightest thing on screen. The old
+   values put a 70/84% wash over the whole frame, which read as a dark page
+   with a video faintly behind it rather than as a film with words on it. */
+.stage .scrim{position:absolute;inset:0;background:
+  linear-gradient(to bottom,rgba(9,26,19,.3) 0%,rgba(9,26,19,0) 22%,
+                  rgba(9,26,19,0) 60%,rgba(9,26,19,.3) 100%)}
+/* A soft pool under whichever corner is speaking. Tighter and far lighter
+   than before: it only has to lift the type off the trees, and the words
+   carry a shadow of their own for the rest. */
+.stage .spot{display:none;position:absolute;inset:0;opacity:0;transition:opacity .6s ease;
+  background:radial-gradient(52% 56% at var(--sx,20%) var(--sy,75%),
+             rgba(9,26,19,.34) 0%,rgba(9,26,19,.14) 54%,transparent 78%)}
+.stage .spot.on{opacity:1}
+
+.ring{position:absolute;left:var(--gutter);bottom:clamp(40px,7vh,80px);z-index:6;
+  font-size:.78rem;color:var(--bone-soft);display:flex;align-items:center;gap:.6rem}
+.ring::before{content:"";width:9px;height:9px;border:1px solid var(--moss);
+  border-right-color:transparent;border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ring[hidden]{display:none}
+
+/* ---------------------------------------------------------------- beats -- */
+.beats{position:absolute;inset:0;z-index:4;pointer-events:none}
+.beat{position:absolute;max-width:min(34rem,44vw);opacity:0;isolation:isolate;
+  transition:opacity .26s ease}
+.beat.on{opacity:1;transition:opacity .5s ease}
+/* The old backdrop was a dark ellipse sitting behind each block, which read
+   as a smudge over the footage. Legibility now comes from three things that
+   cost the picture almost nothing: a wedge of grade anchored to the frame
+   edge the beat sits against, weight and size in the type itself, and a tight
+   shadow on the glyphs. The middle of the frame is never touched. */
+.stage .wedge{position:absolute;inset:0;z-index:3;pointer-events:none;
+  opacity:0;transition:opacity .5s ease}
+.stage .wedge.on{opacity:1}
+.stage .wedge.left{background:linear-gradient(100deg,
+  rgba(6,20,14,.68) 0%,rgba(6,20,14,.4) 20%,rgba(6,20,14,.1) 40%,transparent 56%)}
+.stage .wedge.right{background:linear-gradient(260deg,
+  rgba(6,20,14,.68) 0%,rgba(6,20,14,.4) 20%,rgba(6,20,14,.1) 40%,transparent 56%)}
+.stage .wedge.foot{background:linear-gradient(to top,
+  rgba(6,20,14,.78) 0%,rgba(6,20,14,.44) 26%,rgba(6,20,14,.1) 52%,transparent 72%)}
+
+/* ---- base type for a beat ------------------------------------------------ */
+.beat .k{display:block;font-size:.95rem;font-weight:600;color:var(--gold);
+  margin-bottom:.85rem;text-shadow:0 1px 12px rgba(6,18,13,.8)}
+.beat h2,.beat h1{font-family:var(--serif);font-weight:600;letter-spacing:-.028em;
+  line-height:1.04;margin:0 0 var(--flow-head);font-size:clamp(2rem,4.4vw,3.8rem);
+  text-shadow:0 2px 26px rgba(6,18,13,.72),0 1px 2px rgba(6,18,13,.6)}
+.beat p{font-size:clamp(1.05rem,1.2vw,1.24rem);font-weight:450;line-height:1.58;color:#f2f5ec;
+  margin:0;text-wrap:pretty;text-shadow:0 1px 14px rgba(6,18,13,.85),0 1px 2px rgba(6,18,13,.5)}
+.beat .num{color:var(--gold)}
+/* A word carried in the accent, not a highlighter box: this is where the
+   sentence turns. */
+.beat h1 em,.beat h2 em{font-style:italic;color:var(--gold)}
+.beat p em{font-style:normal;color:var(--gold);font-weight:600}
+@media(max-width:900px){.beat{max-width:min(34rem,86vw)}}
+
+/* ---- the word engine ----------------------------------------------------- */
+.beat .anim{perspective:900px}
+.beat .anim .w{display:inline-block;vertical-align:bottom;
+  padding-bottom:.14em;margin-bottom:-.14em}
+.beat .anim .i{display:inline-block;transform-origin:top center;
+  transition:transform .82s cubic-bezier(.16,1,.3,1),opacity .55s ease,
+             filter .6s ease,letter-spacing .8s cubic-bezier(.16,1,.3,1);
+  transition-delay:calc(var(--i,0) * 52ms)}
+/* One class deeper than any per-beat entrance rule, so the rest state wins
+   wherever it sits in the file. */
+.beats .beat.on .anim .i{transform:none;opacity:1;filter:none;letter-spacing:normal}
+
+/* A hairline rule anchors the block and gives the eye a start edge. */
+.beat::before{content:"";position:absolute;left:-1.15rem;top:.15rem;bottom:.15rem;
+  width:2px;background:linear-gradient(to bottom,var(--gold),rgba(236,205,125,0));
+  opacity:0;transition:opacity .6s ease .15s}
+.beat.on::before{opacity:.9}
+.beat.b2::before,.beat.b3::before{left:auto;right:-1.15rem}
+.beat.b2::before{background:linear-gradient(to bottom,var(--gold),rgba(236,205,125,0))}
+.beat.b4::before{display:none}
+
+/* Arriving is staged; leaving is not. A beat that retracts on the same
+   staggered timing as it arrived is still on screen a second later, under the
+   beat that replaced it. */
+.beats .beat:not(.on) .anim .i,
+.beats .beat:not(.on) .k,
+.beats .beat:not(.on) p,
+.beats .beat:not(.on) .figs,
+.beats .beat:not(.on) .inline-fig{transition-duration:.22s;transition-delay:0s}
+
+/* Copy around the heading follows it in, rather than arriving together. */
+.beat .k,.beat p,.beat .figs,.beat .inline-fig{opacity:0;transform:translateY(15px);
+  transition:opacity .6s ease,transform .75s cubic-bezier(.16,1,.3,1)}
+.beats .beat.on .k,.beats .beat.on p,.beats .beat.on .figs,
+.beats .beat.on .inline-fig{opacity:1;transform:none}
+.beat.on .k{transition-delay:.04s}
+.beat.on p{transition-delay:.44s}
+.beat.on .inline-fig,.beat.on .figs{transition-delay:.62s}
+
+/* ---- 1. what this is, lower left: words lift out of their own baseline -- */
+.beat.b0{left:var(--gutter);bottom:clamp(84px,14vh,140px);max-width:min(46rem,52vw)}
+.beat.b0 .anim .w{overflow:hidden}
+.beat.b0 .anim .i{transform:translateY(108%)}
+
+/* ---- 2. the problem, upper left: words slide in from behind the edge ---- */
+.beat.b1{left:var(--gutter);top:clamp(120px,18vh,190px)}
+.beat.b1 .anim .w{overflow:hidden}
+.beat.b1 .anim .i{transform:translateX(-112%)}
+
+/* ---- 3. why, middle right: words resolve out of focus ------------------- */
+.beat.b2{right:var(--gutter);top:50%;transform:translateY(-50%);text-align:right}
+.beat.b2 .anim .i{filter:blur(14px);opacity:0;transform:translateY(.2em) scale(1.06)}
+
+/* ---- 4. the payoff, middle left: words fall in from above --------------- */
+.beat.b3{left:var(--gutter);top:50%;transform:translateY(-50%)}
+.beat.b3 .anim .i{transform:translateY(-.5em) rotateX(-82deg);opacity:0}
+
+/* ---- 5. the drive, across the foot: words open out of tight tracking ---- */
+.beat.b4{left:var(--gutter);right:var(--gutter);bottom:clamp(62px,9vh,108px);
+  max-width:none}
+.beat.b4 .anim{max-width:min(54ch,100%);font-size:clamp(1.5rem,2.5vw,2.25rem)}
+.beat.b4 p{max-width:62ch}
+.beat.b4 .anim .i{opacity:0;letter-spacing:.4em;transform:translateY(14px);
+  filter:blur(6px)}
+
+/* The counters that live over the hero. Under the drive they form an
+   instrument panel across the foot of the frame. */
+.beat .figs{display:flex;flex-wrap:wrap;gap:1.6rem 2.6rem;margin-top:1.7rem}
+.beat .fig{display:flex;flex-direction:column;gap:.35rem}
+.beat .fig b{font-family:var(--mono);font-weight:300;letter-spacing:-.045em;line-height:1;
+  font-variant-numeric:tabular-nums;font-size:clamp(1.85rem,3.3vw,2.9rem);color:var(--gold);
+  text-shadow:0 2px 22px rgba(6,18,13,.6)}
+.beat .fig span{font-size:.9rem;color:rgba(244,246,239,.85);max-width:20ch;
+  text-shadow:0 1px 12px rgba(6,18,13,.8)}
+/* Divided by rules between the columns rather than around them, so the first
+   figure in every row starts on the same left edge as the prose above it —
+   at both column counts. */
+.beat.b4 .figs{display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  border-top:1px solid var(--rule-dark);margin-top:1.9rem;padding-top:1.6rem}
+.beat.b4 .fig{padding:0 1.5rem;border-left:1px solid var(--rule-dark)}
+.beat.b4 .fig:nth-child(4n+1){border-left:none;padding-left:0}
+.beat.b4 .fig:not(.key) b{color:var(--bone)}
+.beat.b4 .fig{border-left-color:var(--rule-dark)}
+@media(max-width:1080px){
+  .beat.b4 .figs{grid-template-columns:1fr 1fr;gap:1.15rem 0}
+  .beat.b4 .fig:nth-child(2n+1){border-left:none;padding-left:0}}
+
+/* A single figure riding beside an earlier beat, to put a number on screen
+   before the payoff arrives. */
+.beat .inline-fig{font-family:var(--mono);color:var(--gold);font-weight:300;
+  font-variant-numeric:tabular-nums;text-shadow:0 2px 22px rgba(6,18,13,.6);
+  letter-spacing:-.03em;font-size:clamp(1.5rem,3vw,2.4rem);display:inline-block;
+  margin-top:.9rem}
+
+/* ------------------------------------------------------- static fallback -- */
+.static-hero{display:none;position:relative;color:var(--bone);
+  min-height:92vh;min-height:92svh;overflow:hidden;
+  background:var(--forest-deep);align-items:flex-end}
+.static-hero .poster{position:absolute;inset:0;background:url('ridge-poster.jpg') center/cover}
+.static-hero .scrim{position:absolute;inset:0;background:linear-gradient(to bottom,
+  rgba(9,26,19,.42) 0%,rgba(9,26,19,.04) 34%,rgba(9,26,19,.88) 100%)}
+.static-hero .inner{position:relative;z-index:2;width:100%;padding-bottom:clamp(48px,9vh,90px)}
+.static-hero .display{text-shadow:0 2px 30px rgba(6,18,13,.55)}
+.static-hero .lede{color:var(--bone-soft);text-shadow:0 1px 16px rgba(6,18,13,.7)}
+html.no-scrub #track{display:none}
+html.no-scrub .static-hero{display:flex}
+
+/* On a phone the journey becomes a stack of chapters: same story, same order,
+   no seeking. A hero that cannot scrub should still be able to explain
+   itself. */
+.chapters{display:none}
+html.no-scrub .chapters{display:block}
+.chapter{padding:clamp(54px,9vh,90px) 0;border-bottom:1px solid var(--rule)}
+.chapter:last-child{border-bottom:none}
+.chapter h2{font-family:var(--serif);font-size:clamp(1.75rem,6.6vw,2.4rem);font-weight:600;
+  letter-spacing:-.028em;
+  line-height:1.04;margin:0 0 .9rem}
+.chapter p{color:var(--ink-soft);margin:0;font-size:.98rem;line-height:1.62}
+
+@media(prefers-reduced-motion:reduce){
+  .beat .anim .i,.beat .k,.beat p,.beat .figs,.beat .inline-fig{
+    opacity:1!important;transform:none!important;filter:none!important;
+    letter-spacing:normal!important}
+}
+
+/* The static hero is a dark band too, so its call to action takes the light
+   treatment rather than sitting dark-green against dark trees. */
+.static-hero .btn-primary{background:var(--moss);color:#12220c;border-color:var(--moss);
+  box-shadow:0 10px 30px -12px rgba(0,0,0,.7)}
+.static-hero .btn-primary:hover{background:#bcd89f;border-color:#bcd89f}

@@ -454,88 +454,88 @@
  },
  "tiles": [
   {
-   "file": "SeaLake_1857.png",
-   "label": "SeaLake",
-   "split_path": "SeaLake/SeaLake_1857.jpg",
-   "answers": 4,
-   "wrong": 4
+   "file": "AnnualCrop_1082.png",
+   "label": "AnnualCrop",
+   "split_path": "AnnualCrop/AnnualCrop_1082.jpg",
+   "answers": 1,
+   "wrong": 0
   },
   {
-   "file": "Forest_2059.png",
-   "label": "Forest",
-   "split_path": "Forest/Forest_2059.jpg",
-   "answers": 4,
-   "wrong": 4
-  },
-  {
-   "file": "Industrial_19.png",
-   "label": "Industrial",
-   "split_path": "Industrial/Industrial_19.jpg",
-   "answers": 3,
-   "wrong": 4
-  },
-  {
-   "file": "River_2274.png",
-   "label": "River",
-   "split_path": "River/River_2274.jpg",
-   "answers": 3,
-   "wrong": 3
-  },
-  {
-   "file": "HerbaceousVegetation_1098.png",
+   "file": "HerbaceousVegetation_2233.png",
    "label": "HerbaceousVegetation",
-   "split_path": "HerbaceousVegetation/HerbaceousVegetation_1098.jpg",
+   "split_path": "HerbaceousVegetation/HerbaceousVegetation_2233.jpg",
+   "answers": 1,
+   "wrong": 0
+  },
+  {
+   "file": "Highway_1562.png",
+   "label": "Highway",
+   "split_path": "Highway/Highway_1562.jpg",
+   "answers": 1,
+   "wrong": 0
+  },
+  {
+   "file": "Forest_1287.png",
+   "label": "Forest",
+   "split_path": "Forest/Forest_1287.jpg",
+   "answers": 2,
+   "wrong": 1
+  },
+  {
+   "file": "Industrial_1016.png",
+   "label": "Industrial",
+   "split_path": "Industrial/Industrial_1016.jpg",
+   "answers": 2,
+   "wrong": 1
+  },
+  {
+   "file": "Pasture_1033.png",
+   "label": "Pasture",
+   "split_path": "Pasture/Pasture_1033.jpg",
+   "answers": 2,
+   "wrong": 1
+  },
+  {
+   "file": "PermanentCrop_1009.png",
+   "label": "PermanentCrop",
+   "split_path": "PermanentCrop/PermanentCrop_1009.jpg",
    "answers": 3,
+   "wrong": 2
+  },
+  {
+   "file": "Residential_1004.png",
+   "label": "Residential",
+   "split_path": "Residential/Residential_1004.jpg",
+   "answers": 3,
+   "wrong": 2
+  },
+  {
+   "file": "River_1589.png",
+   "label": "River",
+   "split_path": "River/River_1589.jpg",
+   "answers": 4,
    "wrong": 3
   },
   {
-   "file": "Pasture_733.png",
-   "label": "Pasture",
-   "split_path": "Pasture/Pasture_733.jpg",
-   "answers": 3,
-   "wrong": 2
+   "file": "SeaLake_973.png",
+   "label": "SeaLake",
+   "split_path": "SeaLake/SeaLake_973.jpg",
+   "answers": 4,
+   "wrong": 3
   },
   {
-   "file": "PermanentCrop_2125.png",
-   "label": "PermanentCrop",
-   "split_path": "PermanentCrop/PermanentCrop_2125.jpg",
-   "answers": 3,
-   "wrong": 2
-  },
-  {
-   "file": "Residential_2618.png",
-   "label": "Residential",
-   "split_path": "Residential/Residential_2618.jpg",
-   "answers": 3,
-   "wrong": 2
-  },
-  {
-   "file": "Highway_1979.png",
+   "file": "Highway_1777.png",
    "label": "Highway",
-   "split_path": "Highway/Highway_1979.jpg",
-   "answers": 3,
-   "wrong": 2
+   "split_path": "Highway/Highway_1777.jpg",
+   "answers": 4,
+   "wrong": 4
   },
   {
-   "file": "River_1475.png",
-   "label": "River",
-   "split_path": "River/River_1475.jpg",
-   "answers": 1,
-   "wrong": 0
-  },
-  {
-   "file": "Industrial_1992.png",
-   "label": "Industrial",
-   "split_path": "Industrial/Industrial_1992.jpg",
-   "answers": 1,
-   "wrong": 0
-  },
-  {
-   "file": "Industrial_2363.png",
-   "label": "Industrial",
-   "split_path": "Industrial/Industrial_2363.jpg",
-   "answers": 1,
-   "wrong": 0
+   "file": "Pasture_1275.png",
+   "label": "Pasture",
+   "split_path": "Pasture/Pasture_1275.jpg",
+   "answers": 4,
+   "wrong": 4
   }
  ]
 }

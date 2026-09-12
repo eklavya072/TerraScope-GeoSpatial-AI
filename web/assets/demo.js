@@ -108,10 +108,22 @@ function spacedLabel(name) {
     els.tilenote.textContent = t.src
       ? 'Your image, resized to ' + SIZE + ' \u00d7 ' + SIZE +
         ' and normalised exactly as the benchmark does. It stays in this tab.'
-      : (t.answers > 1
-          ? 'Held-out test tile. The five models return ' + t.answers +
-            ' different answers to it, and ' + t.wrong + ' of them are wrong.'
-          : 'Held-out test tile. All five models agree on this one.');
+      : 'Held-out test tile. ' + outcome(t);
+  }
+
+  /* The dropdown spans the range of outcomes the zoo produces -- tiles every
+     model gets right, tiles that split it, and tiles only the largest model
+     survives -- so the caption names which of those this one is instead of
+     reciting the same sentence twelve times. Both counts come from the tile
+     record, measured when the tiles were chosen. */
+  function outcome(t) {
+    var n = 5 - (t.wrong || 0);          // models that get this tile right
+    if (!t.wrong) return 'All five models get this one right.';
+    if (n === 1) return 'Only one of the five gets this right; the other four ' +
+                        'return ' + (t.answers - 1) + ' other answers between them.';
+    if (n === 0) return 'All five models get this one wrong.';
+    return n + ' of the five get this right. The zoo returns ' + t.answers +
+           ' different answers to it.';
   }
 
   function tensorFromTile(file) {

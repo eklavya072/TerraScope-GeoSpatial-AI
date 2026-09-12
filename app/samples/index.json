@@ -1,118 +1,193 @@
 {
  "fold": "test",
- "note": "Tiles chosen from the held-out test fold for disagreement: the count of distinct answers the five int8 models return, and how many of them are wrong, are recorded per tile.",
+ "note": "Tiles chosen from the held-out test fold to span the range of outcomes: how many of the five int8 models classify each one correctly, which ones, and how many distinct answers they return, are recorded per tile.",
  "per_class": 2,
  "selection_seed": 0,
  "split_csv": "splits/eurosat_split_seed42.csv",
  "split_sha256": "b77443792ba4b11439ed220b3dea699ce61e48e0a0af49c51fb6a8cf43b0595d",
  "tiles": [
   {
-   "file": "SeaLake_1857.png",
+   "file": "AnnualCrop_1082.png",
    "fold": "test",
-   "source_sha256": "c876d2d6eb72cdbc308a75da7ef94e8f582a20fec98ece0a7aba2e10a8e51f99",
-   "split_path": "SeaLake/SeaLake_1857.jpg",
-   "true_label": "SeaLake",
-   "distinct_answers": 4,
-   "models_wrong": 4
+   "source_sha256": "48ac390592c35586730520a5a813982d9467c9b8d44c38159e8c04899880b4d3",
+   "split_path": "AnnualCrop/AnnualCrop_1082.jpg",
+   "true_label": "AnnualCrop",
+   "distinct_answers": 1,
+   "models_wrong": 0,
+   "models_correct": [
+    "efficientnet_lite0",
+    "mobilenetv3_large",
+    "mobilenetv3_small",
+    "mobilevit_s",
+    "resnet50"
+   ],
+   "n_correct": 5
   },
   {
-   "file": "Forest_2059.png",
+   "file": "HerbaceousVegetation_2233.png",
    "fold": "test",
-   "source_sha256": "c703775a7baf73052c2846068f014a3985a079c17d3b455badb9e9784aebada3",
-   "split_path": "Forest/Forest_2059.jpg",
-   "true_label": "Forest",
-   "distinct_answers": 4,
-   "models_wrong": 4
-  },
-  {
-   "file": "Industrial_19.png",
-   "fold": "test",
-   "source_sha256": "8cf0771062d6c40d1f4b49933b11177446effbbf34add8346278dae73c210615",
-   "split_path": "Industrial/Industrial_19.jpg",
-   "true_label": "Industrial",
-   "distinct_answers": 3,
-   "models_wrong": 4
-  },
-  {
-   "file": "River_2274.png",
-   "fold": "test",
-   "source_sha256": "323cd2a9ddb62e140069e213b61075069b2b174f35a4692889c3859a2c53bf02",
-   "split_path": "River/River_2274.jpg",
-   "true_label": "River",
-   "distinct_answers": 3,
-   "models_wrong": 3
-  },
-  {
-   "file": "HerbaceousVegetation_1098.png",
-   "fold": "test",
-   "source_sha256": "740d59d49968fbba49760001efc5df19c6abdb3461dace9992fe50b22d792ba2",
-   "split_path": "HerbaceousVegetation/HerbaceousVegetation_1098.jpg",
+   "source_sha256": "90bcab4e21475df4930e073fba54300b94dadce3aedb117c9ad9be762337e886",
+   "split_path": "HerbaceousVegetation/HerbaceousVegetation_2233.jpg",
    "true_label": "HerbaceousVegetation",
-   "distinct_answers": 3,
-   "models_wrong": 3
+   "distinct_answers": 1,
+   "models_wrong": 0,
+   "models_correct": [
+    "efficientnet_lite0",
+    "mobilenetv3_large",
+    "mobilenetv3_small",
+    "mobilevit_s",
+    "resnet50"
+   ],
+   "n_correct": 5
   },
   {
-   "file": "Pasture_733.png",
+   "file": "Highway_1562.png",
    "fold": "test",
-   "source_sha256": "67062e8e81d16ce3be706fd2c02747e2f1e001b53f5a184e2cdfdae971f2f835",
-   "split_path": "Pasture/Pasture_733.jpg",
+   "source_sha256": "b5a97a1e4682588af3f76325497730f79e2a7e53e6b73804f9e3a40828d50368",
+   "split_path": "Highway/Highway_1562.jpg",
+   "true_label": "Highway",
+   "distinct_answers": 1,
+   "models_wrong": 0,
+   "models_correct": [
+    "efficientnet_lite0",
+    "mobilenetv3_large",
+    "mobilenetv3_small",
+    "mobilevit_s",
+    "resnet50"
+   ],
+   "n_correct": 5
+  },
+  {
+   "file": "Forest_1287.png",
+   "fold": "test",
+   "source_sha256": "50cb47ed5cfa9f1e54a3241ba79db2ef7584c3ba084d82a73eed8217a7059187",
+   "split_path": "Forest/Forest_1287.jpg",
+   "true_label": "Forest",
+   "distinct_answers": 2,
+   "models_wrong": 1,
+   "models_correct": [
+    "efficientnet_lite0",
+    "mobilenetv3_large",
+    "mobilevit_s",
+    "resnet50"
+   ],
+   "n_correct": 4
+  },
+  {
+   "file": "Industrial_1016.png",
+   "fold": "test",
+   "source_sha256": "dad0fe86a3a78fdbddb68b73e440e68d9d857b797f23bfb65283c3f661e1913c",
+   "split_path": "Industrial/Industrial_1016.jpg",
+   "true_label": "Industrial",
+   "distinct_answers": 2,
+   "models_wrong": 1,
+   "models_correct": [
+    "efficientnet_lite0",
+    "mobilenetv3_large",
+    "mobilenetv3_small",
+    "resnet50"
+   ],
+   "n_correct": 4
+  },
+  {
+   "file": "Pasture_1033.png",
+   "fold": "test",
+   "source_sha256": "911c680f73eaa76cf3ebaf5c12425a7188e8289fbe0809782e499fb99fb8a96b",
+   "split_path": "Pasture/Pasture_1033.jpg",
    "true_label": "Pasture",
-   "distinct_answers": 3,
-   "models_wrong": 2
+   "distinct_answers": 2,
+   "models_wrong": 1,
+   "models_correct": [
+    "efficientnet_lite0",
+    "mobilenetv3_large",
+    "mobilevit_s",
+    "resnet50"
+   ],
+   "n_correct": 4
   },
   {
-   "file": "PermanentCrop_2125.png",
+   "file": "PermanentCrop_1009.png",
    "fold": "test",
-   "source_sha256": "5e3fdbdfe6c3dcb803371f395fa848dc9ebe61b060e1fd089e4b4cd4a1ca887f",
-   "split_path": "PermanentCrop/PermanentCrop_2125.jpg",
+   "source_sha256": "739348223b0c623bcf29b8baa0b1ac5d3de9784b07695ffeb3763f252e756f82",
+   "split_path": "PermanentCrop/PermanentCrop_1009.jpg",
    "true_label": "PermanentCrop",
    "distinct_answers": 3,
-   "models_wrong": 2
+   "models_wrong": 2,
+   "models_correct": [
+    "efficientnet_lite0",
+    "mobilenetv3_large",
+    "resnet50"
+   ],
+   "n_correct": 3
   },
   {
-   "file": "Residential_2618.png",
+   "file": "Residential_1004.png",
    "fold": "test",
-   "source_sha256": "98cb9c3730ead084275389585227a7ba1c1c8c35f79be713b034286d7dbfd780",
-   "split_path": "Residential/Residential_2618.jpg",
+   "source_sha256": "b7b0124fc0e0cdcea97caf650b16ce9fe5d7c714c3cbcccf8f8b2addcd07636b",
+   "split_path": "Residential/Residential_1004.jpg",
    "true_label": "Residential",
    "distinct_answers": 3,
-   "models_wrong": 2
+   "models_wrong": 2,
+   "models_correct": [
+    "efficientnet_lite0",
+    "mobilenetv3_large",
+    "resnet50"
+   ],
+   "n_correct": 3
   },
   {
-   "file": "Highway_1979.png",
+   "file": "River_1589.png",
    "fold": "test",
-   "source_sha256": "0248a26f56e222fd2ff807e169d58ea1620452edb0d2ddc7f6b4b38452ac36ee",
-   "split_path": "Highway/Highway_1979.jpg",
-   "true_label": "Highway",
-   "distinct_answers": 3,
-   "models_wrong": 2
-  },
-  {
-   "file": "River_1475.png",
-   "fold": "test",
-   "source_sha256": "3be9ddb12cc22ffaf4ffab9369cb0617b53c1c68d478a98462846831b7695c2d",
-   "split_path": "River/River_1475.jpg",
+   "source_sha256": "be2c6536549e1c0b2aa77c97f632854c571c18a4b5223219d37f45432694f456",
+   "split_path": "River/River_1589.jpg",
    "true_label": "River",
-   "distinct_answers": 1,
-   "models_wrong": 0
+   "distinct_answers": 4,
+   "models_wrong": 3,
+   "models_correct": [
+    "efficientnet_lite0",
+    "resnet50"
+   ],
+   "n_correct": 2
   },
   {
-   "file": "Industrial_1992.png",
+   "file": "SeaLake_973.png",
    "fold": "test",
-   "source_sha256": "b5d3d2b3d3d633033250e1fb26abd8a8f7afd8d1dd2aa144f1fffaa406fef536",
-   "split_path": "Industrial/Industrial_1992.jpg",
-   "true_label": "Industrial",
-   "distinct_answers": 1,
-   "models_wrong": 0
+   "source_sha256": "f1514559ba087fa0d5cc912981d72a0f7c7572b9c0b1beeace5f8d46480ee959",
+   "split_path": "SeaLake/SeaLake_973.jpg",
+   "true_label": "SeaLake",
+   "distinct_answers": 4,
+   "models_wrong": 3,
+   "models_correct": [
+    "efficientnet_lite0",
+    "resnet50"
+   ],
+   "n_correct": 2
   },
   {
-   "file": "Industrial_2363.png",
+   "file": "Highway_1777.png",
    "fold": "test",
-   "source_sha256": "bd55862697919ff57c5c375cfe871de4397c426369a38e06df50512f99d9947d",
-   "split_path": "Industrial/Industrial_2363.jpg",
-   "true_label": "Industrial",
-   "distinct_answers": 1,
-   "models_wrong": 0
+   "source_sha256": "f4513c872c6d37fc1cda50c2b78382d720353c8d764dcb01397bc74a72826705",
+   "split_path": "Highway/Highway_1777.jpg",
+   "true_label": "Highway",
+   "distinct_answers": 4,
+   "models_wrong": 4,
+   "models_correct": [
+    "resnet50"
+   ],
+   "n_correct": 1
+  },
+  {
+   "file": "Pasture_1275.png",
+   "fold": "test",
+   "source_sha256": "6ad8769822571531cafe02b6da8a8e66b0a252c8e8c5b30e89a45c6ec6e014e1",
+   "split_path": "Pasture/Pasture_1275.jpg",
+   "true_label": "Pasture",
+   "distinct_answers": 4,
+   "models_wrong": 4,
+   "models_correct": [
+    "resnet50"
+   ],
+   "n_correct": 1
   }
  ]
 }

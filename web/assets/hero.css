@@ -27,6 +27,25 @@
   object-fit:cover;display:block}
 .stage .poster{background:url('ridge-poster.jpg') center/cover no-repeat;
   transition:opacity .6s ease}
+/* The closing frame, carried as a still.
+
+   The reader spends longer on this one frame than on all the others put
+   together — the whole of the last beat sits on it — and it is the worst
+   frame in the file to look at for that long: it is the last picture of its
+   group, so it is reconstructed from the most heavily predicted residual in
+   the encode, and on a display wider than the source it is then stretched.
+   Dense foliage is where both of those show, which is why it is the middle of
+   the frame that goes soft while the rock and water at the edges hold.
+
+   The still is the same frame at a quality no moving picture can afford,
+   sharpened for the stretch. It crossfades in about one sample from the end,
+   so the swap happens between two adjacent frames of the journey and nothing
+   appears to move. Armed from script once the footage is playable, so the
+   1.5MB does not race the video for the connection on arrival. */
+.stage .settle{position:absolute;inset:0;background:center/cover no-repeat;
+  opacity:0;transition:opacity .45s ease;pointer-events:none}
+.stage .settle.armed{background-image:url('ridge-settle.jpg')}
+.stage .settle.on{opacity:1}
 /* Light enough to keep the footage the brightest thing on screen. The old
    values put a 70/84% wash over the whole frame, which read as a dark page
    with a video faintly behind it rather than as a film with words on it. */

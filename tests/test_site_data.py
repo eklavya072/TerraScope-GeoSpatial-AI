@@ -117,7 +117,8 @@ def test_figures_written_into_the_markup_match_the_data(data):
 ALLOWED_CONSTANT_LINES = ("NORM_MEAN", "NORM_STD", "SEEK_EPSILON",
                           "SLIDER_STEP", "REVEAL_THRESHOLD",
                           "SCRUB_ENTER", "SCRUB_EXIT", "SCRUB_FLOOR",
-                          "SCRUB_DONE", "FIRST_FRAME_NUDGE")
+                          "SCRUB_DONE", "FIRST_FRAME_NUDGE", "SETTLE_AT",
+                          "GLIDE_TAU", "GLIDE_MAX_STEP", "GLIDE_SNAP")
 
 
 def test_no_stray_result_shaped_numbers_in_the_scripts():

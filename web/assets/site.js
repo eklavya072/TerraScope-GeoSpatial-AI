@@ -6,7 +6,12 @@
   "use strict";
 
   var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var REVEAL_THRESHOLD = 0.35;   // structural: how much must be visible
+  /* Structural: how much of a block must be showing before it starts to
+     arrive. It used to be a third, which meant the block was already well up
+     the screen before it began — you watched it happen. Low enough now that
+     it starts as it clears the fold and has settled by the time it is in
+     front of you. */
+  var REVEAL_THRESHOLD = 0.12;
 
   /* ---- the instrument bar -------------------------------------------- */
   function nav() {

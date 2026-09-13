@@ -121,6 +121,7 @@
   var poster = document.getElementById('poster');
   var ring = document.getElementById('ring');
   var wedge = document.getElementById('wedge');
+  var settle = document.getElementById('settle');
   var beats = [].slice.call(document.querySelectorAll('.beat'));
   var BEATS = beats.length;
 
@@ -193,6 +194,27 @@
   var VIDEO = 'assets/ridge-scrub.mp4';
   // Structural: far enough off zero that the browser treats it as a real seek.
   var FIRST_FRAME_NUDGE = 0.05;
+  /* Where the closing still takes over, as a fraction of the scroll. At this
+     point the footage is one sample from its end, so the crossfade is between
+     neighbouring frames. */
+  var SETTLE_AT = 0.97;
+
+  /* A wheel or a trackpad delivers scroll in lumps, and a hero driven
+     straight off window.scrollY inherits every one of them: the footage
+     advances in the same steps the input arrives in, and a beat changes on a
+     hard boundary in the middle of one. So the page has a position and the
+     film has a position, and the second chases the first.
+
+     Exponential, against elapsed time rather than per frame, so it settles at
+     the same rate on a 60Hz panel and a 120Hz one. GLIDE_TAU is how long the
+     chase takes to close most of a gap; GLIDE_MAX_STEP caps the step after a
+     stall or a background tab, where one frame can carry a whole second and
+     would otherwise snap. */
+  var GLIDE_TAU = 0.12;        // seconds
+  var GLIDE_MAX_STEP = 0.05;   // seconds of catch-up per frame, at most
+  var GLIDE_SNAP = 0.0004;     // closer than this and there is nothing to see
+
+  var wanted = 0, shown = -1, glideAt = 0;
   var target = 0, requested = -1;
   var lastBeat = -1, dirty = true, raf = null, live = false;
 
@@ -226,6 +248,7 @@
       try { video.currentTime = FIRST_FRAME_NUDGE; } catch (e) { }
     }
     poster.style.opacity = '0';
+    if (settle) settle.classList.add('armed');
     dirty = true;
     schedule();
     /* Wait for enough of the file to have arrived that the seekable range is
@@ -287,10 +310,21 @@
   function readScroll() {
     var span = track.offsetHeight - 2 * window.innerHeight;
     var p = span > 0 ? (window.scrollY - track.offsetTop) / span : 0;
-    p = Math.max(0, Math.min(1, p));
+    wanted = Math.max(0, Math.min(1, p));
+    /* A reload part-way down the page starts where it starts. Chasing from
+       zero would rewind the whole journey in front of someone who never
+       asked to see it. */
+    if (shown < 0) shown = wanted;
+  }
 
+  /* Everything the stage shows hangs off the chased position, the beats
+     included — a beat that changed on the raw scroll while the footage under
+     it was still catching up is exactly the join that reads as forced. */
+  function apply(p) {
     var d = footage();
     if (d) target = p * d;
+
+    if (settle) settle.classList.toggle('on', p >= SETTLE_AT);
 
     var idx = Math.min(BEATS - 1, Math.floor(p * BEATS));
     if (idx !== lastBeat) {
@@ -311,11 +345,21 @@
     raf = null;
     if (window.scrollY !== frame.lastY) { frame.lastY = window.scrollY; dirty = true; }
     if (dirty) { dirty = false; readScroll(); }
-    if (!footage()) { if (live) schedule(); return; }
 
-    /* Chase the target directly. A seek is not free, so easing in 20% steps
-       needs about thirty round trips to arrive and the footage visibly lags
-       the scroll. One seek per frame, always aimed at the newest position.
+    var now = (window.performance && performance.now) ? performance.now() : Date.now();
+    var dt = Math.min(GLIDE_MAX_STEP, (now - (glideAt || now)) / 1000);
+    glideAt = now;
+    if (TS.reduced || Math.abs(wanted - shown) < GLIDE_SNAP) shown = wanted;
+    else shown += (wanted - shown) * (1 - Math.exp(-dt / GLIDE_TAU));
+    apply(shown);
+
+    if (!footage()) { if (live || shown !== wanted) schedule(); return; }
+
+    /* Seek straight to the target, with no easing of its own. The glide
+       already lives in the position above; easing the seek as well would put
+       two lags in series, and a seek is not free — twenty percent steps need
+       about thirty round trips to arrive, and the footage visibly trails the
+       page. One seek per frame, always aimed at the newest position.
 
        The comparison is against the position last asked for, not against
        currentTime. A seek lands on the nearest decodable frame, which at
@@ -326,7 +370,7 @@
       requested = target;
       try { video.currentTime = target; } catch (e) { /* seek raced a reload */ }
     }
-    if (live || video.seeking) schedule();
+    if (live || video.seeking || shown !== wanted) schedule();
   }
   frame.lastY = -1;
 

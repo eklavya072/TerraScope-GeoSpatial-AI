@@ -49,7 +49,6 @@ function spacedLabel(name) {
   var els = {
     tile: document.getElementById('tile'),
     clearup: document.getElementById('clearup'),
-    diag: document.getElementById('diag'),
     precision: document.getElementById('precision'),
     chips: document.getElementById('chips'),
     tilebox: document.getElementById('tilebox'),
@@ -69,10 +68,6 @@ function spacedLabel(name) {
 
   function progress(fraction) {
     els.progress.style.transform = 'scaleX(' + fraction.toFixed(4) + ')';
-  }
-
-  function fmt(v, dec) {
-    return v == null ? 'not measured' : v.toFixed(dec);
   }
 
   function configFor(model, precision) {
@@ -151,31 +146,6 @@ function spacedLabel(name) {
       img.crossOrigin = 'anonymous';
       img.src = /^(data:|blob:)/.test(file) ? file : 'assets/' + file;
     });
-  }
-
-  /* The runtime's own wording for a failed allocation is "no available
-     backend found", which tells a visitor nothing about what to do. */
-  function diagnostics() {
-    var w = (window.ort && ort.env && ort.env.wasm) || {};
-    var bundle = '(none)';
-    /* Matches the file name rather than the path: the runtime is served from
-       this origin as vendor/ort/ort.wasm.min.js, which contains no
-       "onnxruntime" to look for. */
-    [].forEach.call(document.scripts, function (t) {
-      if (!t.src) return;
-      var file = t.src.split('/').pop();
-      if (file.indexOf('ort') === 0 || t.src.indexOf('onnxruntime') !== -1) {
-        bundle = file;
-      }
-    });
-    return [
-      bundle,
-      'v' + ((window.ort && ort.env && ort.env.versions && ort.env.versions.web) || '?'),
-      'threads ' + (w.numThreads === undefined ? '?' : w.numThreads),
-      'simd ' + (w.simd === undefined ? '?' : w.simd),
-      'isolated ' + !!self.crossOriginIsolated,
-      (navigator.deviceMemory ? navigator.deviceMemory + 'GB' : 'mem ?')
-    ].join(' · ');
   }
 
   function explain(e) {
@@ -339,7 +309,6 @@ function spacedLabel(name) {
         missed.map(function (r) { return r.model; }).join(', ') + '.';
     }
     els.caption.textContent = note;
-    if (els.diag) els.diag.textContent = 'Runtime: ' + diagnostics();
   }
 
   /* Copy kept beside the markup's version in demo.html: whichever of the two

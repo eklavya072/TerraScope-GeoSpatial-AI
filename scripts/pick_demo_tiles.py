@@ -164,16 +164,16 @@ def main() -> None:
     for f in os.listdir(WEB_ASSETS):
         if f.endswith(".png") and "_" in f and f.split("_")[0] in CLASSES:
             os.remove(os.path.join(WEB_ASSETS, f))
-    for f in os.listdir(OUT_DIR):
-        if f.endswith(".png"):
-            os.remove(os.path.join(OUT_DIR, f))
 
     tiles = []
     for row in picked:
         rel, label = row["rel"], row["label"]
         src = os.path.join(CORPUS, rel)
         name = os.path.splitext(os.path.basename(rel))[0] + ".png"
-        Image.open(src).convert("RGB").save(os.path.join(OUT_DIR, name))
+        # Written once, to the directory that serves them. app/samples keeps
+        # the record (index.json) rather than a second copy of every image:
+        # the record's provenance is the sha256 of the ORIGINAL corpus file,
+        # which a re-saved PNG cannot attest to anyway.
         Image.open(src).convert("RGB").save(os.path.join(WEB_ASSETS, name))
         tiles.append({
             "file": name,

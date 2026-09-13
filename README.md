@@ -1,7 +1,7 @@
 # TerraScope — the accuracy–energy trade-off for land-cover classification on CPU-only hardware
 
 [![CI](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/actions/workflows/ci.yml)
-[![Live demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://terrascope.streamlit.app)
+[![Live demo](https://img.shields.io/badge/demo-run%20the%20models-1b4332)](https://eklavya072.github.io/TerraScope-GeoSpatial-AI/)
 [![License: MIT](https://img.shields.io/badge/code-MIT-blue)](LICENSE)
 [![Data: CC BY 4.0](https://img.shields.io/badge/results%20data-CC--BY--4.0-blue)](LICENSE-DATA)
 [![EuroSAT](https://img.shields.io/badge/dataset-EuroSAT%20(MIT)-green)](https://github.com/phelber/eurosat)
@@ -492,26 +492,31 @@ tests/                  58 tests over the committed artefacts; no GPU or dataset
 splits/                 the committed split, its metadata and its hash
 results/                runs.jsonl, bench.jsonl, memory.jsonl, summary.json, tables, figure
 web/                    the demo site: static pages, vendored runtime, served ONNX graphs
-app_demo.py             the demo app: race models live, see what quantisation costs
-app/                    demo assets -- shipped ONNX graphs, test-fold tiles, data layer
-requirements.txt        demo app dependencies only (no torch, no tensorflow)
+app/                    provenance record for the demo tiles (which tiles, from which fold)
 PROTOCOL.md             measurement protocol, outcomes and deviations
 DATASHEET.md            Datasheets for Datasets (Gebru et al.)
 ```
 
 ## Demo
 
-`app_demo.py` is a Streamlit app that shows the finding in about a minute: it
-races every model on a tile from the held-out test fold, measuring latency
-**live on whatever server it is running on**, and looks up accuracy, energy and
-CO₂e from the committed benchmark. It never computes an energy figure — the
-deployment container has no power telemetry, and the app says so on every
-screen. Anything it cannot source says *not measured*.
+The demo is the static site in `web/`: no server, no Python, no build step. It
+races the models on a tile from the held-out test fold, **measuring latency in
+your browser** through WebAssembly, and looks up accuracy, energy and CO₂e from
+the committed benchmark. It never computes an energy figure — a browser has no
+power telemetry, and the page says so. Anything it cannot source reads
+*not measured*.
+
+Open `web/index.html` directly, or serve it so that byte ranges work (the
+scroll-scrubbed hero seeks, and the stdlib handler answers every range with the
+whole file):
 
 ```bash
-pip install -r requirements.txt
-streamlit run app_demo.py
+python scripts/serve_web.py 8610
 ```
+
+The ONNX Runtime build the page uses is vendored in `web/vendor/ort/` rather
+than loaded from a CDN, so the demo works on networks that block public CDNs
+and cannot drift to a version these numbers were not produced with.
 
 The original TensorFlow demo has moved to the `archive/legacy-tensorflow-app`
 branch. Its reported 95.67% was independently verified during this work, but it

@@ -19,8 +19,13 @@
     flex-wrap:wrap;margin-bottom:1.2rem}
   .status{font-size:.9rem;color:var(--ink-soft)}
   .status.busy{color:var(--brand)}
-  .bar{height:3px;background:var(--rule);border-radius:99px;margin-top:.55rem;overflow:hidden}
-  .bar i{display:block;height:100%;width:100%;background:var(--brand);
+  /* Deep green rather than the neutral rule grey: the rail belongs to the
+     run, and at this depth it reads as part of the lab panel instead of a
+     stray hairline above the table. The fill is the pale green, so the
+     distance travelled is legible against the track it travels on. */
+  .bar{height:3px;background:var(--bottle);border-radius:99px;margin-top:.55rem;
+    overflow:hidden}
+  .bar i{display:block;height:100%;width:100%;background:var(--moss);
     transform:scaleX(0);transform-origin:left;transition:transform .3s ease}
 
   /* One green on the page that carries information. */
@@ -123,7 +128,6 @@
                 <div class="empty">Select at least one model.</div>
               </div>
               <p class="note" id="caption"></p>
-              <p class="note diag" id="diag"></p>
             </div>
           </div>
         </div>

@@ -217,3 +217,7 @@ results/log_*.txt
 # `make export` from the trained checkpoints. The recommended deployable model
 # is committed under models_release/ instead.
 results/onnx/
+
+# Local editor/agent tooling: preview launch configs and session state. Useful
+# while working on the project, meaningless to anyone cloning it.
+.claude/

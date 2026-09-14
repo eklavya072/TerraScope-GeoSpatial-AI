@@ -301,7 +301,7 @@ claim it is.
 | **Committed split** | EuroSAT ships no official split. Ours is deterministic, sha256-hashed and version-controlled — CI verifies the hash every run. |
 | **Variance, not point estimates** | Five seeds per configuration, Student-t 95% confidence intervals, Welch's t-test with Holm–Bonferroni correction. |
 | **Nothing hand-typed** | Every published table and headline number is generated from `results/bench.jsonl`. CI regenerates them and fails on drift. |
-| **83 tests** | Run against committed artefacts — no GPU, no dataset download. |
+| **85 tests** | Run against committed artefacts — no GPU, no dataset download. |
 
 <details>
 <summary>Exclusions, and what was excluded</summary>
@@ -417,11 +417,30 @@ The conclusions above are bounded by these, and the most important is first.
 - **Geographic bias.** EuroSAT covers 34 European countries. Nothing here supports a
   claim about performance elsewhere — land cover, agriculture, settlement morphology
   and phenology all differ.
-- **No scene-level split control.** EuroSAT tiles are cut from larger Sentinel-2
-  scenes and the corpus carries no scene identifier, so spatially adjacent tiles may
-  span folds. This inflates all accuracies relative to true generalisation to unseen
-  geography. Every model is affected equally, so comparisons remain valid, but the
-  absolute numbers are not a geographic-generalisation claim.
+- **No scene-level split control — measured, and it costs 0.3–0.8 pp.** EuroSAT
+  tiles are cut from larger Sentinel-2 scenes and the corpus carries no scene
+  identifier, so the split is stratified by class but cannot be grouped by scene.
+  [`scripts/leakage_check.py`](scripts/leakage_check.py) quantifies the result
+  ([`results/leakage.json`](results/leakage.json)):
+
+  *The folds are not separated.* Each test tile's cosine similarity to its nearest
+  train tile is indistinguishable from the same statistic computed **inside** the
+  train fold — median 0.6510 against a control of 0.6548, p99 0.9984 against 0.9983.
+  A test tile sits exactly as close to the training data as a train tile sits to its
+  own same-scene neighbours.
+
+  *Near-duplicates are common.* **8.8% of test tiles** have a train neighbour at
+  cosine ≥ 0.99, and 88.2% of those pairs share a class — rising monotonically from
+  42% at ≥ 0.90, which is what distinguishes real duplication from two tiles of flat
+  texture looking alike.
+
+  *The cost.* Dropping those tiles moves the committed EfficientNet-Lite0 int8 graph
+  from 97.33% to 97.08% (−0.26 pp); dropping everything at ≥ 0.90 gives 96.56%
+  (−0.78 pp). So the absolute accuracies here are inflated by roughly **0.3–0.8 pp**
+  against truly unseen geography, and that is a *lower* bound — it catches visible
+  duplication, not same-scene tiles that happen to look different. Every model is
+  affected equally, so the comparisons and the ranking stand; it is the absolute
+  numbers that should not be read as a geographic-generalisation claim.
 - **RGB only.** EuroSAT's 13-band multispectral form is not benchmarked.
 - **One preprocessing convention.** Fairness requires identical preprocessing, so all
   five models use ImageNet channel statistics. Four report exactly those; MobileViT's

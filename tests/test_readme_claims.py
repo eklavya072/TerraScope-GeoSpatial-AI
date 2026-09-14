@@ -223,3 +223,59 @@ def test_readme_test_count_matches_reality(readme):
     for c in claimed:
         assert int(c) == real, (
             f"the README claims {c} tests; there are {real}")
+
+
+@pytest.fixture(scope="module")
+def leakage():
+    import json
+    import os
+    path = os.path.join("results", "leakage.json")
+    if not os.path.exists(path):
+        pytest.skip("results/leakage.json not present")
+    with open(path) as fh:
+        return json.load(fh)
+
+
+def test_leakage_claims_match_the_measurement(readme, leakage):
+    """The scene-leakage limitation quotes numbers; they must be the measured ones.
+
+    This limitation went from a warning to a measurement, which means it went
+    from unfalsifiable to checkable. Everything it now claims is in
+    results/leakage.json, so the prose is held to the artefact the same way the
+    headline figures are held to summary.json.
+    """
+    t = leakage["test_vs_train"]
+    c = leakage["control_train_vs_train"]
+    assert f"{t['median']:.4f}" in readme, "test-vs-train median drifted"
+    assert f"{c['median']:.4f}" in readme, "control median drifted"
+    assert f"{t['p99']:.4f}" in readme and f"{c['p99']:.4f}" in readme
+
+    hi = next(r for r in leakage["by_threshold"] if r["threshold"] == 0.99)
+    lo = next(r for r in leakage["by_threshold"] if r["threshold"] == 0.90)
+    assert f"{hi['test_fraction'] * 100:.1f}% of test tiles" in readme
+    assert f"{hi['same_class_fraction'] * 100:.1f}%" in readme
+    assert f"{leakage['accuracy_full_test_fold'] * 100:.2f}%" in readme
+    for r in (hi, lo):
+        assert f"{r['accuracy_excluding_them'] * 100:.2f}%" in readme
+        assert f"{abs(r['accuracy_delta_pp']):.2f} pp" in readme
+
+
+def test_leakage_control_is_a_real_control(leakage):
+    """The control must use a comparable candidate pool, or it proves nothing.
+
+    The whole argument rests on test-vs-train and train-vs-train being measured
+    against pools of the same size. If a refactor ever samples the control
+    differently, the comparison silently stops meaning anything while still
+    producing two plausible numbers.
+    """
+    t = leakage["test_vs_train"]
+    c = leakage["control_train_vs_train"]
+    for k in ("median", "p90", "p99", "max"):
+        assert 0.0 <= t[k] <= 1.0 and 0.0 <= c[k] <= 1.0
+
+    # Monotone rise in same-class fraction with similarity is what separates
+    # duplication from flat texture. If it inverts, the reading is wrong.
+    fracs = [r["same_class_fraction"] for r in
+             sorted(leakage["by_threshold"], key=lambda r: r["threshold"])]
+    assert all(a <= b for a, b in zip(fracs, fracs[1:])), (
+        f"same-class fraction must rise with similarity, got {fracs}")

@@ -1,0 +1,54 @@
+name: Deploy site
+
+# Publishes web/ to GitHub Pages. The site is plain HTML, CSS and JS with no
+# build step, so "deploy" means: upload the folder. It lives in web/ rather
+# than the two locations branch-based Pages can serve (the repository root, or
+# docs/), and renaming it to docs/ would have the repository claim
+# "documentation" where it means "website" -- hence a workflow.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Least privilege: read the repository, write a Pages deployment, and mint the
+# OIDC token deploy-pages exchanges for permission to publish.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time, and never cancel one midway: a cancelled deploy can
+# leave the live site on a half-published state.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false          # the legacy .h5 models are not part of the site
+
+      # The site must not publish a number the benchmark does not support.
+      # check_site.py compares every figure in the markup against
+      # web/data/site.json, which build_site_data.py exports from results/.
+      # It is stdlib-only, so this gate costs seconds and needs no environment.
+      # ci.yml tests the same property; running it here is what stops a bad
+      # site reaching the public URL rather than merely failing a check.
+      - name: Published figures match the benchmark
+        run: python3 scripts/check_site.py
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

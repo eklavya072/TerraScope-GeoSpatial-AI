@@ -278,45 +278,16 @@
   video.addEventListener('loadedmetadata', arrived);
   video.addEventListener('durationchange', arrived);
   video.addEventListener('canplay', arrived);
-  /* The page is complete without the footage: keep the poster and drop the
-     journey to a single screen so nothing scrolls past an empty stage. */
-  var gaveUp = false;
-  function giveUp() {
-    if (gaveUp || footage()) return;
-    gaveUp = true;
+  video.addEventListener('error', function () {
+    /* The page is complete without the footage: keep the poster and drop the
+       journey to a single screen so nothing scrolls past an empty stage. */
     ring.hidden = true;
     video.remove();
     track.style.height = '100svh';
     beats.forEach(function (b, i) { b.classList.toggle('on', i === 0); });
-  }
-  video.addEventListener('error', giveUp);
-
-  /* A download that STALLS fires no error event, so the error handler above
-     never runs and the ring sits on "Loading the ridge" indefinitely -- the
-     page reads as broken while it is in fact waiting on a request that will
-     never finish. Bound the wait. moov is at the front of the file, so
-     loadedmetadata needs only the first few kilobytes and arrives in well
-     under a second on any connection that is working at all; twelve seconds
-     without it means the footage is not coming, whatever the reason. */
-  var WATCHDOG_MS = 12000;
-  /* The footage is decoration, and it must not sit inside the document's load.
-     hero.js is a synchronous script, so starting the fetch here puts 33 MB on
-     the critical path: the browser counts it toward the page, the tab's
-     progress bar stops a fifth of the way along, and a visitor watches a
-     stalled loading bar instead of the poster that is already painted behind
-     it. Start it after everything else has arrived. The poster is showing by
-     then, arrived() swaps it for the first frame, and the error handler
-     already covers footage that never turns up at all. */
-  function beginFootage() {
-    video.src = VIDEO;
-    video.load();
-  }
-  function beginFootageAndWatch() {
-    beginFootage();
-    setTimeout(giveUp, WATCHDOG_MS);
-  }
-  if (document.readyState === 'complete') beginFootageAndWatch();
-  else addEventListener('load', beginFootageAndWatch, { once: true });
+  });
+  video.src = VIDEO;
+  video.load();
 
   /* Safari decodes but does not paint a media element that has never played:
      the seeks land, currentTime advances, and the stage stays on the poster.

@@ -16,14 +16,6 @@ __pycache__/
 # EuroSAT dataset (downloaded at runtime)
 eurosat_dataset/
 
-# Generated test fixtures
-tests/smoke_images/
-tests/_scene/
-tests/benchmark_confusion_matrix.png
-
-# Streamlit secrets
-.streamlit/secrets.toml
-
 # C extensions
 *.so
 
@@ -194,12 +186,6 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# Model files
-app/models/*
-!app/models/.gitkeep
-!app/models/*.h5
-!app/models/*.npy
-
 # --- benchmark artefacts -------------------------------------------------
 # The EuroSAT corpus is redownloaded by scripts/prepare_data.py; only its
 # sha256 manifest and the split file are version-controlled.
@@ -212,10 +198,9 @@ results/log_*.txt
 # results/power_summary.csv carries the per-second means needed to audit the
 # energy integration; per-window joules are already in results/bench.jsonl.
 results/power_log.txt
-results/log_*.txt
 # Exported ONNX graphs: ~1.2GB for the full matrix, regenerable with
-# `make export` from the trained checkpoints. The recommended deployable model
-# is committed under models_release/ instead.
+# `make export` from the trained checkpoints. The graphs the demo serves are
+# committed under web/models/ instead.
 results/onnx/
 
 # Local editor/agent tooling: preview launch configs and session state. Useful

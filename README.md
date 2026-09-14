@@ -8,10 +8,10 @@
 [![Data: CC BY 4.0](https://img.shields.io/badge/results%20data-CC--BY--4.0-blue)](LICENSE-DATA)
 [![EuroSAT](https://img.shields.io/badge/dataset-EuroSAT%20(MIT)-green)](https://github.com/phelber/eurosat)
 
-Five architectures × three numeric precisions × five seeds, trained on EuroSAT under
-one identical recipe and measured on CPU only — accuracy, latency, memory and energy.
-300 measurement windows. Every number regenerates from committed data, and CI fails
-if any of them drifts.
+A **Green AI** benchmark: five architectures × three numeric precisions × five seeds,
+trained on EuroSAT under one identical recipe and measured on CPU only — accuracy,
+latency, memory and energy. 300 measurement windows. Every number regenerates from
+committed data, and CI fails if any of them drifts.
 
 ---
 
@@ -53,6 +53,15 @@ Both of those make the same question load-bearing: *what does the accuracy actua
 cost to run?* Model papers report accuracy. Deployments pay for joules, latency and
 memory. This benchmark measures all four under one recipe so the trade-off can be
 read off directly rather than guessed at.
+
+That is the argument Schwartz et al. made in **[Green AI](https://doi.org/10.1145/3381831)**
+(CACM, 2020): efficiency belongs in the evaluation, not in an appendix, because
+reporting accuracy alone rewards whoever can spend the most compute. Strubell et al.
+(ACL 2019) put numbers on the training side of that; Henderson et al.
+([JMLR 2020](https://jmlr.org/papers/v21/20-312.html)) argued for systematic energy
+and carbon reporting. This repository is a small, complete instance of what those
+papers ask for, applied to **inference** — where a deployed model spends nearly all
+of its lifetime energy, and where the published numbers are thinnest.
 
 ---
 
@@ -404,6 +413,25 @@ The conclusions above are bounded by these, and the most important is first.
 - **Training-time figures mix power regimes.** ResNet-50 seed 0 trained under Low
   Power Mode on battery. Accuracy is unaffected — it comes from checkpoints — but
   `train_seconds` is not comparable across rows, and no benchmark figure depends on it.
+
+---
+
+## The wider point
+
+Green AI is usually argued at training time, where the headline numbers are largest.
+But a model is trained once and served for years — nearly all of its lifetime energy
+is spent on inference, and that is the part most benchmarks leave unmeasured.
+
+Measured here, on this dataset and this hardware, the entire accuracy spread across
+five architectures is 1.25 pp while energy spans a factor of 19. Wherever that shape
+holds, reaching for the largest model that fits is not a cautious default — it is a
+large and invisible energy bill for a difference that may not survive contact with
+the deployment.
+
+The contribution is not that EfficientNet-Lite0 wins; on another dataset or another
+chip it may not. It is that the trade-off was made measurable, under one honest
+recipe, and that every number here can be checked by anyone who clones the
+repository. **Efficiency only becomes a design decision once someone reports it.**
 
 ---
 

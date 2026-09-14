@@ -382,16 +382,26 @@ make test      # run the suite against the committed artefacts
 
 The conclusions above are bounded by these, and the most important is first.
 
-- **Single hardware platform.** One Apple M2. Latency and energy rankings may differ
-  on x86, on server CPUs with AVX-512, or under different memory bandwidth. This is
-  the limitation most likely to change a conclusion.
+- **Single hardware platform.** Every published figure comes from one Apple M2, and
+  energy and accuracy still do. This is the limitation most likely to change a
+  conclusion. *Partially tested:* CI re-times the seven committed graphs on an x86
+  Linux runner on every push and reports rank agreement with the M2 ordering
+  ([`scripts/crossplatform_latency.py`](scripts/crossplatform_latency.py)). That
+  checks whether the deployment recommendation survives a change of instruction set
+  — the part that would actually mislead someone — but a shared CI runner cannot
+  produce publication-grade absolute numbers, and it measures neither energy nor
+  accuracy.
 - **Energy is estimated, not metered.** On-die CPU package power, sampled at 200 ms
   and integrated over each window. Excludes DRAM, display and PSU losses. `codecarbon`
   cannot serve as an independent check: it reads Intel RAPL, which Apple Silicon
   lacks, so it degrades to a hardcoded-TDP model whose output is a linear function of
   runtime — latency wearing a different unit.
 - **CO₂e rests entirely on a stated assumption** — 481 gCO₂e/kWh, world average.
-  National grids range from under 50 to over 700, a ~15× spread. Substitute your own.
+  Carbon scales linearly with it, so substituting your own grid is one
+  multiplication: the recommended configuration's 0.42 g per million inferences
+  becomes ~0.04 g on a grid at 50 gCO₂e/kWh and ~0.61 g at 700. National grids span
+  roughly that range, a ~15× spread — wider than any difference this benchmark
+  measures between models.
 - **EuroSAT is near-saturated**, so architecture differences are small in absolute
   terms even when statistically reliable. That is itself the finding.
 - **Geographic bias.** EuroSAT covers 34 European countries. Nothing here supports a

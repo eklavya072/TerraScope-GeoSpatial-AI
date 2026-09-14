@@ -111,3 +111,40 @@ jobs:
 
       - name: Shell scripts are valid
         run: bash -n scripts/energy_sampler.sh
+
+  crossplatform:
+    name: latency order on x86
+    runs-on: ubuntu-latest
+    # README's first limitation -- "one Apple M2; rankings may differ on x86" --
+    # is the one most likely to change a conclusion, and it was never tested
+    # because testing it looked like it needed a second machine. It does not.
+    # Latency depends on tensor SHAPE, not contents, so the committed graphs can
+    # be timed on this runner with no corpus and no checkpoints. This job is
+    # that second platform.
+    #
+    # It reports; it does not gate. A shared CI runner cannot produce
+    # publication-grade milliseconds, and failing the build on rank divergence
+    # would create pressure to stop looking at exactly the thing worth seeing.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install the locked environment
+        # The lockfile, not a loose pip install: latency depends on the
+        # onnxruntime build, so a cross-platform comparison has to hold the
+        # runtime version fixed or it compares versions instead of platforms.
+        run: uv sync --frozen --group dev
+
+      - name: Time the committed graphs and compare the order
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          OMP_NUM_THREADS: 1
+          MKL_NUM_THREADS: 1
+          OPENBLAS_NUM_THREADS: 1
+        run: uv run python scripts/crossplatform_latency.py

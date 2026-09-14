@@ -286,8 +286,20 @@
     track.style.height = '100svh';
     beats.forEach(function (b, i) { b.classList.toggle('on', i === 0); });
   });
-  video.src = VIDEO;
-  video.load();
+  /* The footage is decoration, and it must not sit inside the document's load.
+     hero.js is a synchronous script, so starting the fetch here puts 33 MB on
+     the critical path: the browser counts it toward the page, the tab's
+     progress bar stops a fifth of the way along, and a visitor watches a
+     stalled loading bar instead of the poster that is already painted behind
+     it. Start it after everything else has arrived. The poster is showing by
+     then, arrived() swaps it for the first frame, and the error handler
+     already covers footage that never turns up at all. */
+  function beginFootage() {
+    video.src = VIDEO;
+    video.load();
+  }
+  if (document.readyState === 'complete') beginFootage();
+  else addEventListener('load', beginFootage, { once: true });
 
   /* Safari decodes but does not paint a media element that has never played:
      the seeks land, currentTime advances, and the stage stays on the poster.

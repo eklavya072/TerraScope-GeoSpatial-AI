@@ -12,6 +12,8 @@ by this file. A claim that appears in neither is a claim nobody is checking.
 
 import re
 import statistics as st
+import subprocess
+import sys
 
 import pytest
 
@@ -199,3 +201,25 @@ def test_only_one_pair_reorders_between_latency_and_energy(readme, bench_rows):
     moved = [k for k, j in zip(by_lat, by_energy) if k != j]
     assert len(moved) == 2, f"{len(moved)} positions differ, not one swapped pair"
     assert "reorders one pair" in readme
+
+
+def test_readme_test_count_matches_reality(readme):
+    """The README said 58 tests while there were 82.
+
+    The landing page has been guarded against exactly this since the site was
+    built (tests/test_site_data.py asserts its stat matches a live collection),
+    and its number stayed right. The README had no such guard, so the README's
+    number is the one that rotted -- through 24 added tests, in three separate
+    places, past every reader. An unchecked number is not a documented number.
+    """
+    out = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q"],
+                         capture_output=True, text=True).stdout
+    m = re.search(r"(\d+) tests? collected", out)
+    assert m, f"could not read the collected count from pytest:\n{out[-500:]}"
+    real = int(m.group(1))
+
+    claimed = re.findall(r"(\d+) tests", readme)
+    assert claimed, "the README no longer states a test count"
+    for c in claimed:
+        assert int(c) == real, (
+            f"the README claims {c} tests; there are {real}")

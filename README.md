@@ -1,4 +1,6 @@
-# TerraScope — the accuracy–energy trade-off for land-cover classification on CPU-only hardware
+# TerraScope
+
+**What does a percentage point of land-cover accuracy cost in energy?**
 
 [![CI](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/eklavya072/TerraScope-GeoSpatial-AI/actions/workflows/ci.yml)
 [![Live demo](https://img.shields.io/badge/demo-run%20the%20models-1b4332)](https://eklavya072.github.io/TerraScope-GeoSpatial-AI/)
@@ -6,24 +8,90 @@
 [![Data: CC BY 4.0](https://img.shields.io/badge/results%20data-CC--BY--4.0-blue)](LICENSE-DATA)
 [![EuroSAT](https://img.shields.io/badge/dataset-EuroSAT%20(MIT)-green)](https://github.com/phelber/eurosat)
 
+Five architectures × three numeric precisions × five seeds, trained on EuroSAT under
+one identical recipe and measured on CPU only — accuracy, latency, memory and energy.
+300 measurement windows. Every number regenerates from committed data, and CI fails
+if any of them drifts.
+
+---
+
 ## The finding
 
-On EuroSAT, replacing ResNet-50 (fp32) with EfficientNet-Lite0 (int8, statically
-quantised) costs **0.67 percentage points of accuracy** — 98.12% ± 0.30 against
-97.45% ± 0.32 — while using **19× less energy per inference** (60.84 J against
-3.18 J per 1,000 images), running **28× faster** (12.24 ms against 0.43 ms p95)
-and occupying **25× less disk** (94.0 MB against 3.8 MB).
+Accuracy is a weak discriminator. Energy is not.
 
-Accuracy differences between architectures are real but small — a 1.25 pp spread
-across five architectures, of which 8 of 10 pairwise comparisons survive
-Holm-Bonferroni correction — whereas energy spans a factor of 19. **On CPU-only
-hardware the deployment decision should therefore be made on energy and latency,
-not on accuracy.**
+|                        | ResNet-50 (fp32) | EfficientNet-Lite0 (int8) | difference |
+| ---------------------- | ---------------: | ------------------------: | ---------: |
+| Top-1 accuracy         |       **98.12%** |               **97.45%** | −0.67 pp |
+| Energy per 1k images   |      **60.84 J** |                **3.18 J** | 19× less |
+| p95 latency            |         12.24 ms |                   0.43 ms | 28× faster |
+| Model on disk          |          94.0 MB |                    3.8 MB | 25× smaller |
 
-Every number in this repository comes from a run we executed on the hardware
-recorded below, against a split file committed to this repository. Energy is
-**estimated** from on-die power telemetry, not metered at the wall; see
-[Limitations](#limitations).
+Swapping the standard baseline for a quantised mobile model costs
+**0.67 percentage points** of accuracy and buys **19× less energy**,
+**28× faster** inference and **25× less disk**.
+
+Across all five architectures accuracy spans a **1.25 pp spread** — of which
+8 of 10 pairwise comparisons survive Holm–Bonferroni correction, so the differences
+are real, just small. Energy spans a factor of 19.
+
+> **On CPU-only hardware, deployment is an energy decision, not an accuracy one.**
+
+Energy is **estimated** from on-die power telemetry, not metered at the wall.
+That distinction is kept everywhere it appears — see [Limitations](#limitations).
+
+---
+
+## Why this question
+
+Land-cover classification from satellite imagery is run by public-sector and
+development organisations on the hardware they already own, which is usually a CPU
+server without a GPU. UNDP's Accelerator Labs, for instance, apply earth-observation
+models to generate land-use and land-cover maps in the field, and UNDP names
+**Green Compute** as one of five foundations for national AI ecosystems.
+
+Both of those make the same question load-bearing: *what does the accuracy actually
+cost to run?* Model papers report accuracy. Deployments pay for joules, latency and
+memory. This benchmark measures all four under one recipe so the trade-off can be
+read off directly rather than guessed at.
+
+---
+
+## Try it
+
+**[Run the models in your browser →](https://eklavya072.github.io/TerraScope-GeoSpatial-AI/)**
+No install. It executes the real ONNX graphs on a held-out test tile via WebAssembly
+and times them on your machine; accuracy and energy are looked up from the committed
+benchmark, never invented.
+
+Or reproduce the whole thing locally:
+
+```bash
+make setup     # locked environment (uv + uv.lock)
+make data      # fetch EuroSAT, write a sha256 manifest
+make split     # regenerate the committed split, verified byte-identical
+make train     # 5 architectures × 5 seeds, one shared recipe
+make export    # ONNX fp32 + int8 dynamic/static
+make bench     # latency, memory and energy matrix (CPU only)
+make report    # rebuild every table, figure and README number
+```
+
+Training uses a GPU where available purely to make the matrix tractable. **All
+benchmarking is CPU-only**, and no reported figure depends on the training device.
+
+<details>
+<summary>Energy measurement needs a privileged sampler</summary>
+
+Apple Silicon exposes on-die power only to root, so a sampler runs alongside the
+benchmark:
+
+```bash
+sudo ./scripts/energy_sampler.sh
+```
+
+Start it before `make bench` and leave it running. Without it the benchmark still
+records accuracy, latency and memory, and reports every energy column as `null`
+rather than substituting an estimate.
+</details>
 
 ---
 
@@ -54,15 +122,14 @@ Accuracy is the mean over 5 seeds with a Student-t 95% confidence interval. Ener
 <!-- END:results_table -->
 
 **ONNX export is accuracy-neutral.** All 25 exported fp32 graphs reproduce their
-PyTorch checkpoint's test accuracy *exactly* — 25/25 identical, maximum
-difference 0.000000 pp. This matters because latency and energy are measured on
-the exported graph while accuracy is attributed to the model: if export drifted,
-every row would be describing two different models in the same line. It is
-asserted as a test (`tests/test_results_integrity.py`), not just observed once.
+PyTorch checkpoint's test accuracy exactly — 25/25 identical, maximum difference
+0.000000 pp. Latency and energy are measured on the exported graph while accuracy is
+attributed to the model, so without this check every row would risk describing two
+different models on one line.
 
-Both int8 columns matter. **Static quantisation is close to free for some
-architectures and catastrophic for others**, which means "quantise it for the
-edge" is not a safe default:
+---
+
+## What quantisation costs
 
 <!-- BEGIN:quantisation -->
 ### Accuracy cost of int8 quantisation
@@ -83,70 +150,32 @@ Paired per-seed differences against each model's own fp32 export, mean with a St
 | resnet50 | int8_static | 98.12 | 97.22 | -0.90 ± 0.50 |
 <!-- END:quantisation -->
 
-EfficientNet-Lite0 loses **0.16 ± 0.23 pp** to static int8 — a confidence
-interval containing zero, so on this dataset its quantised form is statistically
-indistinguishable from its fp32 parent while using 6× less energy. ResNet-50
-loses 0.90 ± 0.50 pp. MobileNetV3-Small loses 64.66 pp and MobileViT-S 48.86 pp:
-post-training quantisation destroys them. We investigated this rather than
-reporting it blind — per-channel weights, min-max / percentile / entropy
-calibration, restricting quantisation to Conv/Gemm, excluding depthwise
-convolutions, signed and unsigned activations, and batch sizes 1 and 64 all fail
-to recover MobileNetV3-Small. Its hard-swish and squeeze-excite activation
-distributions are the textbook case that post-training quantisation cannot
+Quantisation is **architecture-specific, not a uniform tax.**
+
+- **EfficientNet-Lite0 loses 0.16 ± 0.23 pp** — a confidence interval containing
+  zero, so its int8 form is statistically indistinguishable from its fp32 parent
+  while using 6× less energy. ResNet-50 loses 0.90 pp.
+- **MobileNetV3-Small loses 64.66 pp and MobileViT-S 48.86 pp.** Post-training
+  quantisation destroys them. Do not deploy either in int8 without
+  quantisation-aware training.
+- **int8 *dynamic* is strictly dominated** — worse accuracy *and* worse energy than
+  fp32 for every model here. Reported because a negative result saves someone else
+  the experiment.
+
+<details>
+<summary>We tried to recover MobileNetV3-Small, and could not</summary>
+
+Per-channel weights, min-max / percentile / entropy calibration, restricting
+quantisation to Conv/Gemm, excluding depthwise convolutions, signed and unsigned
+activations, and batch sizes 1 and 64 all fail. Its hard-swish and squeeze-excite
+activation distributions are the textbook case post-training quantisation cannot
 represent; recovering them requires quantisation-aware training, which is out of
 scope for a post-training benchmark.
+</details>
 
-**int8 dynamic quantisation is strictly dominated** on this hardware — worse
-accuracy *and* worse energy than fp32 for every model in the zoo. It recomputes
-activation ranges on every call, and ONNX Runtime's dynamic path handles
-convolutions poorly. It is reported because a negative result that saves someone
-else the experiment is worth publishing.
+---
 
-### Is the energy column just the latency column in different units?
-
-A fair objection, and worth answering with the data rather than deflecting.
-Energy per inference is power × time, so if package power were constant across
-configurations the energy axis would carry no information that latency does not.
-
-At a fixed thread count it is *mostly*, but not entirely, latency. Across all 75
-measurement windows at 1 thread, batch 1 (15 model × precision configurations ×
-5 seeds):
-
-| Quantity | Range | Ratio |
-|---|---|---|
-| p50 latency | 0.251 → 12.239 ms | 48.8× |
-| Energy per 1,000 inferences | 1.56 → 63.12 J | 40.5× |
-| Mean package power | 4.86 → 10.24 W | **2.1×** |
-
-Energy correlates with latency at **r = 0.983**. So most of the energy spread is
-the latency spread, and we say so plainly rather than implying two independent
-findings.
-
-What the remaining 2.1× buys is not nothing:
-
-- **Quantised models draw systematically more power.** Mean package power is
-  5.51 W for fp32, 6.16 W for int8-dynamic and **6.95 W for int8-static** — a 26%
-  increase for static int8 over fp32. Quantisation does not simply make the same
-  work shorter; it makes the CPU work harder while it runs. A latency-only
-  reading would overstate int8's energy advantage.
-- **It reorders one pair.** Ranked by latency, `mobilenetv3_large int8_dynamic`
-  beats `efficientnet_lite0 fp32`; ranked by energy, the order reverses. One
-  swap in fifteen is a small effect, and reporting it as small is the honest
-  framing.
-- **Across thread counts the two decouple properly.** Package power spans 3.7×
-  among the 4-thread windows (4.78 → 17.76 W) against 2.1× at 1 thread. That is
-  where latency alone genuinely misleads about energy — and, as documented above,
-  it is also where core placement confounds the comparison, so we draw no
-  cross-model conclusion from it.
-
-The honest summary: **on this hardware, at a fixed thread count, energy is
-largely a restatement of latency, with a real but second-order power term that
-matters most when comparing precisions.** The energy axis earns its place
-because the deployment question is energy, and because the power term moves in
-the opposite direction to the intuition that int8 is uniformly cheaper — but it
-is not an independent axis, and this README does not claim it is.
-
-### Accuracy: which differences are real?
+## Are the accuracy differences real?
 
 <!-- BEGIN:significance -->
 ### Which accuracy differences are statistically distinguishable?
@@ -169,140 +198,115 @@ Welch's t-test over seeds, Holm-Bonferroni corrected across all pairwise compari
 8 of 10 pairwise accuracy differences are statistically distinguishable after correction.
 <!-- END:significance -->
 
-Two cautions on reading that table. First, *statistically distinguishable* is not
-*operationally meaningful*: the entire spread from best to worst architecture is
-1.25 pp, and a difference can be reliable yet too small to justify any change in
-deployment. Second, the comparisons are between architectures under one fixed
-recipe and one fixed budget — a model that trains poorly here might do better
-with tuning it was deliberately not given.
+Two cautions. *Statistically distinguishable* is not *operationally meaningful*: the
+entire best-to-worst spread is 1.25 pp, and a difference can be reliable yet far too
+small to justify changing a deployment. And these compare architectures under one
+fixed recipe and budget — a model that trains poorly here might do better with tuning
+it was deliberately not given.
 
 ### Accuracy versus energy
 
 ![Accuracy versus energy, with the Pareto frontier marked](results/pareto.png)
 
 The marked frontier is the true mathematical one, so it includes
-`mobilenetv3_small int8_static` purely because nothing is cheaper — at 32.5%
-accuracy that configuration is useless in practice. Restricted to configurations
-above 97% accuracy, the frontier is **EfficientNet-Lite0 int8_static** (97.45%,
-3.18 J/1k), then **ResNet-50 int8_static** (97.22%, 14.39 J/1k) is dominated by
-it, and **MobileViT-S fp32** (98.36%, 26.31 J/1k) buys the last 0.9 pp for 8.3×
-the energy.
-
-### Deployment recommendation
-
-For a CPU-only ministry server classifying Sentinel-2 RGB tiles, deploy
-**EfficientNet-Lite0 quantised to int8 with static calibration**. It costs 0.67 pp
-of accuracy against the ResNet-50 fp32 baseline and 0.90 pp against the most
-accurate model measured (MobileViT-S fp32), in exchange for 19× less energy, 28× lower p95 latency,
-and a 3.8 MB artefact that fits comfortably in a constrained deployment. On a single
-thread it sustains roughly 2,300 images per second (0.43 ms p95), and its 17 MB
-resident footprint leaves the machine free for the rest of its work. If the last 0.9 pp of accuracy genuinely matters —
-which, given the dataset caveats below, should be argued rather than assumed —
-MobileViT-S in fp32 is the accuracy-optimal choice at 8.3× the energy. Do **not**
-deploy a quantised MobileNetV3 or MobileViT without quantisation-aware training:
-their post-training int8 accuracy is unusable.
-
-### Measurement protocol and exclusions
-
-Rejection criteria for measurement windows were **committed before any
-measurement was taken** — `bd06ff5` (26 Aug 2026) introduced
-[PROTOCOL.md](PROTOCOL.md) and `bench/exclusion.py`; `1c9fa33` (2 Sep 2026) is
-the first commit carrying `results/bench.jsonl`. Seven days, and the ordering is
-checkable with `git log bd06ff5..1c9fa33`. Deciding which windows to discard
-after seeing the numbers would be post-hoc selection.
-
-**4 of 300 windows were excluded** — two for latency p95/p50 > 1.50 (contention),
-two for energy sample coverage below 0.95. None fall in the primary reporting
-configuration, so no headline figure changes when they are removed; this was
-verified by recomputing the summary both ways. The excluded rows remain in
-`results/bench.jsonl` and are listed in `results/summary.json`; nothing is
-deleted. PROTOCOL.md also records five deviations from the original
-pre-registration, including two criteria that were never instrumented and the
-fact that failing windows were not re-run.
-
-Energy is reported **gross**, not baseline-subtracted. The idle baseline measured
-over 338 s immediately after the matrix was 0.036 W, which is 0.78% of the
-lowest-power measurement window and less for every other one — so baseline
-subtraction would move no figure by more than 0.78%, well inside the reported
-seed-to-seed variation.
+`mobilenetv3_small int8_static` purely because nothing is cheaper — at 32.5% accuracy
+that configuration is useless in practice. Restricted to configurations above 97%
+accuracy: **EfficientNet-Lite0 int8_static** (97.45%, 3.18 J/1k) leads,
+**ResNet-50 int8_static** (97.22%, 14.39 J/1k) is dominated by it, and
+**MobileViT-S fp32** (98.36%, 26.31 J/1k) buys the last 0.9 pp for 8.3× the energy.
 
 ---
 
-## Reproducing this
+## Deployment recommendation
 
-```bash
-make setup     # install the locked environment (uv + uv.lock)
-make data      # fetch EuroSAT, write data/eurosat_rgb/MANIFEST.sha256
-make split     # regenerate the committed split (verifies byte-identical)
-make train     # 5 architectures x 5 seeds under one recipe
-make export    # ONNX fp32 + int8 dynamic/static for all 25 checkpoints
-make bench     # latency, memory and energy matrix
-make report    # rebuild tables, Pareto figure, and this README's tables
-```
+For a CPU-only server classifying Sentinel-2 RGB tiles, deploy **EfficientNet-Lite0
+quantised to int8 with static calibration.**
 
-`make all` runs the whole pipeline. Training uses the GPU where one is available
-(MPS on this machine) purely to make the matrix tractable; **all benchmarking is
-CPU-only** and no reported figure depends on the training device.
+It gives up 0.67 pp against the ResNet-50 fp32 baseline and 0.90 pp against the most
+accurate model measured, in exchange for 19× less energy, 28× lower p95 latency and a
+3.8 MB artefact. On one thread it sustains roughly 2,300 images/second (0.43 ms p95),
+and its 17 MB resident footprint leaves the machine free for other work.
 
-Energy measurement requires a privileged sampler running alongside the benchmark,
-because Apple Silicon exposes on-die power only to root:
+If the last 0.9 pp genuinely matters — which, given the dataset caveats below, should
+be argued rather than assumed — MobileViT-S fp32 is accuracy-optimal at 8.3× the
+energy. Do **not** deploy a quantised MobileNetV3 or MobileViT without
+quantisation-aware training.
 
-```bash
-sudo ./scripts/energy_sampler.sh
-```
+<details>
+<summary><b>Is the energy column just the latency column in different units?</b></summary>
 
-Start it before `make bench` and leave it running. Without it the benchmark still
-records accuracy, latency and memory, and reports every energy column as null
-rather than substituting an estimate.
+A fair objection, answered with the data rather than deflected. Energy is power × time,
+so if package power were constant the energy axis would carry nothing latency doesn't.
 
-### Tests
+Across all 75 measurement windows at 1 thread, batch 1:
 
-```bash
-uv sync --frozen --group dev
-uv run pytest tests/ -v
-```
+| Quantity | Range | Ratio |
+|---|---|---|
+| p50 latency | 0.251 → 12.239 ms | 48.8× |
+| Energy per 1,000 inferences | 1.56 → 63.12 J | 40.5× |
+| Mean package power | 4.86 → 10.24 W | **2.1×** |
 
-58 tests, no GPU and no dataset download required — they run against the
-committed split and the committed results, so CI verifies the artefacts that
-actually ship. Coverage is deliberately weighted towards the failures this
-project has actually had:
+Energy correlates with latency at **r = 0.983**. So most of the energy spread *is* the
+latency spread, and we say so plainly rather than implying two independent findings.
 
-- **Split integrity** — hash matches its sidecar, fold sizes, stratification
-  within 1% per class, and no tile in two folds.
-- **Energy integration** — three regression tests for real bugs: parsing the log
-  once while the sampler appends (would have nulled every energy figure),
-  integrating across second-quantised timestamps (returned exactly 0 J), and
-  partial trailing lines during a concurrent write.
-- **Statistics** — that `mean_ci` uses the t distribution rather than z (with
-  n=5 the difference is ~30% of the interval width), and that Holm correction
-  actually suppresses ten p=0.04 comparisons.
-- **Results invariants** — one split hash and one recipe hash across every row,
-  5 seeds per model, uniform measurement conditions (AC, Low Power Mode off, one
-  ONNX Runtime version), and ONNX/PyTorch accuracy agreement on all 25 exports.
-- **Internal consistency of `summary.json`** — the machine-readable artefact
-  deposited under the DOI must not contradict itself, e.g. a regime note that
-  says "confounded" beside a flag that says clean.
-- **README claims** — every headline number is re-derived from `summary.json`
-  and checked against the prose. This exists because a hand-typed sentence once
-  claimed a 4-thread result that was wrong in both magnitude and direction while
-  the generated tables beside it were correct.
+What the remaining 2.1× buys is not nothing:
 
-### What makes this reproducible
+- **Quantised models draw systematically more power** — 5.51 W for fp32, 6.16 W for
+  int8-dynamic, **6.95 W for int8-static**: a 26% increase for static int8 over fp32.
+  Quantisation doesn't simply make the same work shorter; it makes the CPU work harder
+  while it runs. A latency-only reading would overstate int8's energy advantage.
+- **It reorders one pair.** By latency, `mobilenetv3_large int8_dynamic` beats
+  `efficientnet_lite0 fp32`; by energy the order reverses. One swap in fifteen is a
+  small effect, and reporting it as small is the honest framing.
+- **Across thread counts they decouple properly.** Package power spans 3.7× among the
+  4-thread windows against 2.1× at 1 thread — but that is also where core placement
+  confounds the comparison, so no cross-model conclusion is drawn from it.
 
-- **The split is committed.** EuroSAT ships no official train/test partition, so
-  every published EuroSAT figure is measured against folds the reader cannot see.
-  `splits/eurosat_split_seed42.csv` is generated deterministically from seed 42,
-  verified byte-identical across runs and `PYTHONHASHSEED` values, and referenced
-  by sha256 in every result row. Runs abort if it does not match its sidecar hash.
-- **The corpus is hashed.** `data/eurosat_rgb/MANIFEST.sha256` records a sha256
-  per tile, written from undecoded bytes so the files are byte-identical to
-  upstream.
-- **The recipe is hashed** into every result, so a silent change is detectable
-  after the fact.
-- **The environment is pinned**, `torch==2.9.1` and `onnxruntime==1.29.0` exactly,
-  because latency and energy are only comparable within a fixed runtime version.
-  Linux resolves the same version from PyTorch's CPU index (`2.9.1+cpu`), which
-  avoids ~3 GB of CUDA runtime this CPU-only benchmark would never load.
+The honest summary: at a fixed thread count energy is largely a restatement of
+latency, with a real but second-order power term that matters most when comparing
+precisions. The energy axis earns its place because the deployment question *is*
+energy, and because the power term moves opposite to the intuition that int8 is
+uniformly cheaper — but it is not an independent axis, and this README does not
+claim it is.
+
+**Thread counts.** MobileNetV3-Small fp32 goes from 0.94 to 0.79 J/1k at 4 threads
+(1.50× faster, 16% less energy) at batch 1, and from 6.64 to 3.06 J/1k
+(2.19× faster, 54% less energy) at batch 32.
+</details>
+
+---
+
+## Why you can trust these numbers
+
+| | |
+|---|---|
+| **Pre-registered** | Rejection criteria were committed **before any measurement** — `bd06ff5` (26 Aug) added PROTOCOL.md and `bench/exclusion.py`; `1c9fa33` (2 Sep) is the first commit carrying results. Seven days apart, checkable with `git log bd06ff5..1c9fa33`. |
+| **One recipe** | Identical training recipe, preprocessing, split and seed protocol for every architecture. The recipe is hashed into every result row, so a changed recipe cannot masquerade as the old one. |
+| **Committed split** | EuroSAT ships no official split. Ours is deterministic, sha256-hashed and version-controlled — CI verifies the hash every run. |
+| **Variance, not point estimates** | Five seeds per configuration, Student-t 95% confidence intervals, Welch's t-test with Holm–Bonferroni correction. |
+| **Nothing hand-typed** | Every published table and headline number is generated from `results/bench.jsonl`. CI regenerates them and fails on drift. |
+| **83 tests** | Run against committed artefacts — no GPU, no dataset download. |
+
+<details>
+<summary>Exclusions, and what was excluded</summary>
+
+**4 of 300 windows were excluded** — two for latency p95/p50 > 1.50 (contention), two
+for energy sample coverage below 0.95. None fall in the primary reporting
+configuration, so no headline figure changes when they are removed; this was verified
+by recomputing the summary both ways. Excluded rows remain in `results/bench.jsonl`
+and are listed in `results/summary.json` — nothing is deleted.
+
+[PROTOCOL.md](PROTOCOL.md) records five deviations from the original
+pre-registration, including two criteria that were never instrumented and the fact
+that failing windows were not re-run.
+
+Energy is reported **gross**, not baseline-subtracted. The idle baseline measured over
+338 s immediately after the matrix was 0.036 W — 0.78% of the lowest-power window, and
+less for every other one, well inside seed-to-seed variation.
+</details>
+
+<details>
+<summary>Training recipe and hardware</summary>
 
 <!-- BEGIN:recipe -->
 Every architecture is trained under this identical recipe. There is no
@@ -325,10 +329,6 @@ supported way to give one model a tuned recipe of its own.
 | warmup_epochs | `2` |
 | weight_decay | `0.0001` |
 <!-- END:recipe -->
-
----
-
-## Hardware and measurement conditions
 
 <!-- BEGIN:hardware -->
 All measurements in this repository come from ONE machine. Latency,
@@ -361,165 +361,92 @@ left unused: the question is what CPU-only hardware achieves. Training used
 the GPU, which affects no reported figure -- training cost is not part of the
 deployment claim being made.
 <!-- END:hardware -->
+</details>
 
-Measurement discipline: thread counts are pinned in both the ONNX Runtime session
-and the environment (`OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS`,
-`VECLIB_MAXIMUM_THREADS`) — BLAS pools ignore the session setting, and unpinned
-thread counts are the most common reason CPU latency fails to reproduce. 50
-warm-up inferences are discarded before timing; each configuration is then timed
-for at least 1,000 inferences (batch-1 windows ran ≥1,666 calls; batch-32
-windows ran ≥100 calls, so ≥3,200 images) and targets a 20-second window,
-reported as p50/p95/p99 with variance. The run count is sized from a short probe
-of per-call cost, which can undershoot when the probe overestimates it: the
-shortest window actually achieved was 16.9 s. Timing reuses one fixed input tensor, so the input is resident in
-cache: this isolates model compute from data-loading cost, which is the intent,
-but it means the figures are a lower bound on end-to-end serving latency, which
-would also carry decode and preprocessing. The whole matrix ran in one session on AC power with Low Power
-Mode disabled; `powermetrics` recorded no thermal warning for the duration.
-
-The primary configuration is **1 intra-op thread**, which is both the
-reproducible one and what a shared multi-tenant server realistically grants a
-single inference process.
-
-⚠️ **The 4-thread rows carry a confound and should not be used for cross-model
-comparison.** Their power draw is bimodal — 53 of 150 windows sat near 6 W and
-the rest near 15.4 W — and the regime tracks *when* a model was measured, not
-which model it was, consistent with macOS scheduling threads onto efficiency
-versus performance cores. ResNet-50 and MobileNetV3-Small were measured almost
-entirely in the low-power regime (26/30 and 27/30 windows); the other three
-entirely in the high-power one. Latency moved with it: for ResNet-50 fp32 at 4 threads,
-one window measured 5.25 ms p95 at 16.0 W against four windows averaging 8.0 ms
-at 4.9 W — note that the high-power side here is a single window, so treat it as
-an illustration of the regime split rather than an estimate of its size. The rows are real
-measurements, but of two different machine configurations, so they are shipped
-characterised (`thread_regime_confound` in `results/summary.json`) rather than
-compared. The 1-thread rows show no such split (minority regime 0.7% of windows),
-which is why every headline figure in this README is 1-thread, batch-1.
-
-For reference, within the *same* regime, 4 threads does reduce energy per
-inference: MobileNetV3-Small fp32 goes from 6.97 J/1k at 1 thread to 5.84 J/1k
-at 4 threads (1.50× faster, 16% less energy) at batch 1, and from 6.64 to
-3.06 J/1k (2.19× faster, 54% less energy) at batch 32.
+```bash
+make test      # run the suite against the committed artefacts
+```
 
 ---
 
 ## Limitations
 
-- **Single hardware platform.** One Apple M2. Latency and energy rankings may
-  differ on x86, on server-class CPUs with AVX-512, or under different memory
-  bandwidth. This is the limitation most likely to change a conclusion.
-- **Energy is estimated, not metered.** Figures come from Apple Silicon's on-die
-  CPU package power telemetry, sampled at 200 ms and integrated over each timed
-  window. This excludes DRAM, display and PSU losses and is not a wall-socket
-  measurement. `codecarbon` cannot serve as an independent check here: it reads
-  Intel RAPL, which Apple Silicon lacks, so it degrades to a hardcoded-TDP model
-  whose output is a linear function of runtime — that would be latency wearing a
-  different unit, so it is not reported.
-- **CO₂e rests entirely on a stated assumption.** Carbon scales linearly with
-  assumed grid intensity (481 gCO₂e/kWh here, world average). National grids
-  range from under 50 to over 700, a ~15× spread. Substitute your own.
-- **EuroSAT is near-saturated**, so architecture differences are small in
-  absolute terms even when statistically reliable. Accuracy is a weak
-  discriminator on this dataset; that is itself the finding.
-- **Geographic bias.** EuroSAT covers 34 European countries. Nothing here
-  supports a claim about performance elsewhere; land cover, agriculture,
-  settlement morphology and phenology all differ.
+The conclusions above are bounded by these, and the most important is first.
+
+- **Single hardware platform.** One Apple M2. Latency and energy rankings may differ
+  on x86, on server CPUs with AVX-512, or under different memory bandwidth. This is
+  the limitation most likely to change a conclusion.
+- **Energy is estimated, not metered.** On-die CPU package power, sampled at 200 ms
+  and integrated over each window. Excludes DRAM, display and PSU losses. `codecarbon`
+  cannot serve as an independent check: it reads Intel RAPL, which Apple Silicon
+  lacks, so it degrades to a hardcoded-TDP model whose output is a linear function of
+  runtime — latency wearing a different unit.
+- **CO₂e rests entirely on a stated assumption** — 481 gCO₂e/kWh, world average.
+  National grids range from under 50 to over 700, a ~15× spread. Substitute your own.
+- **EuroSAT is near-saturated**, so architecture differences are small in absolute
+  terms even when statistically reliable. That is itself the finding.
+- **Geographic bias.** EuroSAT covers 34 European countries. Nothing here supports a
+  claim about performance elsewhere — land cover, agriculture, settlement morphology
+  and phenology all differ.
 - **No scene-level split control.** EuroSAT tiles are cut from larger Sentinel-2
-  scenes, and the corpus as redistributed carries no scene identifier. Spatially
-  adjacent tiles may therefore span folds, which inflates all accuracies here
-  relative to true generalisation to unseen geography. Every model is affected
-  equally, so comparisons remain valid, but the absolute numbers should not be
-  read as geographic generalisation.
+  scenes and the corpus carries no scene identifier, so spatially adjacent tiles may
+  span folds. This inflates all accuracies relative to true generalisation to unseen
+  geography. Every model is affected equally, so comparisons remain valid, but the
+  absolute numbers are not a geographic-generalisation claim.
 - **RGB only.** EuroSAT's 13-band multispectral form is not benchmarked.
-- **One preprocessing convention.** The fairness rule requires identical
-  preprocessing, so all five models use ImageNet channel statistics. Four report
-  exactly those in their pretraining config; MobileViT's expects raw [0,1]
-  inputs, so its numbers carry a caveat the others do not.
+- **One preprocessing convention.** Fairness requires identical preprocessing, so all
+  five models use ImageNet channel statistics. Four report exactly those; MobileViT's
+  config expects raw [0,1] inputs, so its numbers carry a caveat the others do not.
 - **Early stopping interacts with fast convergence.** MobileViT-S reaches ~98%
-  validation accuracy within one epoch; on two of five seeds the patience-4 rule
-  fired at epochs 6 and 7. The rule is identical for every model, so the
-  comparison is fair, but it explains MobileViT-S's wider confidence interval.
-- **Training-time figures mix power regimes.** ResNet-50 seed 0 trained under
-  Low Power Mode on battery; the rest did not. Accuracy is unaffected — it comes
-  from checkpoints — but `train_seconds` in `results/runs.jsonl` is not
-  comparable across rows. No benchmark figure depends on it.
+  validation accuracy within one epoch; on two of five seeds the patience-4 rule fired
+  at epochs 6 and 7. The rule is identical for every model, so the comparison is fair,
+  but it explains MobileViT-S's wider confidence interval.
+- **Training-time figures mix power regimes.** ResNet-50 seed 0 trained under Low
+  Power Mode on battery. Accuracy is unaffected — it comes from checkpoints — but
+  `train_seconds` is not comparable across rows, and no benchmark figure depends on it.
 
 ---
 
-## Attribution and licences
+## Repository map
+
+```
+bench/          the benchmark
+  config.py       zoo, shared recipe, normalisation, grid intensity (single source of truth)
+  data.py         split-driven loading; the ONLY way to obtain a fold
+  models.py       one construction path, so no architecture gets special treatment
+  train.py        one (model, seed) under the shared recipe
+  export_onnx.py  ONNX fp32 + int8 dynamic/static, calibrated from the train fold only
+  benchmark.py    CPU-only latency/accuracy/energy matrix
+  power.py        powermetrics parsing and energy integration
+  exclusion.py    pre-registered window rejection criteria
+  stats.py        Student-t CIs, Welch tests, Holm correction, Pareto frontier
+  report.py       aggregation -> summary.json, tables, Pareto figure
+scripts/        data prep, split generation, isolated memory measurement, site build
+tests/          the suite; runs on committed artefacts, no GPU or dataset
+splits/         the committed split, its metadata and its sha256
+results/        raw measurements, derived tables, summary.json, Pareto figure
+web/            the demo site: static pages, vendored runtime, served ONNX graphs
+```
+
+Deeper documentation: **[PROTOCOL.md](PROTOCOL.md)** (measurement protocol, outcomes,
+deviations) and **[DATASHEET.md](DATASHEET.md)** (*Datasheets for Datasets*, Gebru et al.).
+
+---
+
+## Licences and attribution
 
 Code is MIT ([LICENSE](LICENSE)). Results data and the split file are CC-BY-4.0
-([LICENSE-DATA](LICENSE-DATA)). A [datasheet](DATASHEET.md) following *Datasheets
-for Datasets* (Gebru et al.) documents the split and results artefacts.
+([LICENSE-DATA](LICENSE-DATA)).
 
-**EuroSAT** is distributed under the MIT licence. Cite:
+**EuroSAT** is distributed under the MIT licence:
 
-> Helber, P., Bischke, B., Dengel, A., & Borth, D. *EuroSAT: A Novel Dataset and
-> Deep Learning Benchmark for Land Use and Land Cover Classification.*
+> Helber, P., Bischke, B., Dengel, A., & Borth, D. *EuroSAT: A Novel Dataset and Deep
+> Learning Benchmark for Land Use and Land Cover Classification.*
 
-**Sentinel-2 / Copernicus.** EuroSAT is derived from Copernicus Sentinel-2
-imagery. Copernicus data is provided under terms granting free access, including
-reproduction, distribution and modification.
+**Sentinel-2 / Copernicus.** EuroSAT is derived from Copernicus Sentinel-2 imagery,
+provided under terms granting free access, including reproduction, distribution and
+modification.
 
-**ESA WorldCover** is *not* used in this project, so its attribution string is
-deliberately omitted rather than included for completeness — printing an
-attribution for data one has not used is a false provenance claim.
-
----
-
-## Architecture
-
-```
-bench/                  the benchmark
-  config.py             zoo, shared recipe, normalisation, grid intensity  (single source of truth)
-  data.py               split-driven loading; the ONLY way to obtain a fold
-  models.py             one construction path, so no architecture gets special treatment
-  train.py              one (model, seed) under the shared recipe -> results/runs.jsonl
-  export_onnx.py        ONNX fp32 + int8 dynamic/static, calibrated from the train fold only
-  benchmark.py          CPU-only latency/accuracy/energy matrix -> results/bench.jsonl
-  power.py              powermetrics parsing and energy integration
-  exclusion.py          pre-registered window rejection criteria (see PROTOCOL.md)
-  stats.py              Student-t CIs, Welch tests, Holm correction, Pareto frontier
-  report.py             aggregation -> summary.json, tables, Pareto figure
-scripts/
-  prepare_data.py       materialise EuroSAT with original bytes + sha256 manifest
-  make_split.py         deterministic stratified split (the reproducibility anchor)
-  measure_memory.py     model-attributable RSS in isolated subprocesses
-  energy_sampler.sh     privileged powermetrics sampler
-  render_readme.py      inject measured tables into this README
-tests/                  58 tests over the committed artefacts; no GPU or dataset needed
-.github/workflows/      CI: tests, split hash, README regenerability, imports
-splits/                 the committed split, its metadata and its hash
-results/                runs.jsonl, bench.jsonl, memory.jsonl, summary.json, tables, figure
-web/                    the demo site: static pages, vendored runtime, served ONNX graphs
-app/                    provenance record for the demo tiles (which tiles, from which fold)
-PROTOCOL.md             measurement protocol, outcomes and deviations
-DATASHEET.md            Datasheets for Datasets (Gebru et al.)
-```
-
-## Demo
-
-The demo is the static site in `web/`: no server, no Python, no build step. It
-races the models on a tile from the held-out test fold, **measuring latency in
-your browser** through WebAssembly, and looks up accuracy, energy and CO₂e from
-the committed benchmark. It never computes an energy figure — a browser has no
-power telemetry, and the page says so. Anything it cannot source reads
-*not measured*.
-
-Open `web/index.html` directly, or serve it so that byte ranges work (the
-scroll-scrubbed hero seeks, and the stdlib handler answers every range with the
-whole file):
-
-```bash
-python scripts/serve_web.py 8610
-```
-
-The ONNX Runtime build the page uses is vendored in `web/vendor/ort/` rather
-than loaded from a CDN, so the demo works on networks that block public CDNs
-and cannot drift to a version these numbers were not produced with.
-
-The original TensorFlow demo has moved to the `archive/legacy-tensorflow-app`
-branch. Its reported 95.67% was independently verified during this work, but it
-was measured on a third-party split whose training fold overlaps 1,949 of the
-2,700 tiles in this benchmark's test fold, so it is not comparable to anything
-here and is not carried forward.
+**ESA WorldCover** is *not* used here, so its attribution string is deliberately
+omitted rather than included for completeness — printing an attribution for data one
+has not used is a false provenance claim.

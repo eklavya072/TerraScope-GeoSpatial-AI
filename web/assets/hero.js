@@ -228,10 +228,19 @@
     return (isFinite(d) && d > 0) ? d : 0;
   }
 
-  /* Loaded by src rather than fetched into a Blob: the file is small and
-     densely keyframed, so the browser buffers it quickly and seeks land fast,
-     and a direct src has no cross-origin question to answer wherever this
-     page ends up hosted. */
+  /* Loaded by src rather than fetched into a Blob: a direct src has no
+     cross-origin question to answer wherever this page ends up hosted.
+
+     This comment used to add "the file is small and densely keyframed, so the
+     browser buffers it quickly and seeks land fast". Measured, it is neither.
+     ridge-scrub.mp4 is 3200x1800 at 17.25 Mbps with 14 keyframes across 81
+     frames and 40 B-frames, so a seek to any other frame decodes forward from
+     the last keyframe and half the frames need a LATER frame decoded first.
+     Median seek is ~57ms against a 16.7ms budget at 60fps: every scrub
+     position misses, which is the stutter a visitor sees. Re-encoding
+     all-intra at 1920x1080 measures ~6ms. The trade is resolution, since
+     decode cost scales with pixels -- all-intra at 3200x1800 still measures
+     ~54ms -- so it is a deliberate open decision, not an oversight. */
   var nudged = false;
   function arrived() {
     if (!footage()) return;

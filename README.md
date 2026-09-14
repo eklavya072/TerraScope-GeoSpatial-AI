@@ -241,6 +241,13 @@ be argued rather than assumed — MobileViT-S fp32 is accuracy-optimal at 8.3× 
 energy. Do **not** deploy a quantised MobileNetV3 or MobileViT without
 quantisation-aware training.
 
+> **This recommendation is Apple Silicon-specific.** CI re-times the committed graphs
+> on x86 every push, and the ordering shifts (rho ≈ 0.68): fp32 gains substantially
+> there, to the point that `mobilenetv3_small fp32` becomes the fastest configuration
+> measured — at 97.19% accuracy, within 0.26 pp of the recommendation above and with
+> no quantisation risk at all. Re-measure on your target hardware before deploying;
+> see [Limitations](#limitations).
+
 <details>
 <summary><b>Is the energy column just the latency column in different units?</b></summary>
 
@@ -382,15 +389,18 @@ make test      # run the suite against the committed artefacts
 
 The conclusions above are bounded by these, and the most important is first.
 
-- **Single hardware platform.** Every published figure comes from one Apple M2, and
-  energy and accuracy still do. This is the limitation most likely to change a
-  conclusion. *Partially tested:* CI re-times the seven committed graphs on an x86
-  Linux runner on every push and reports rank agreement with the M2 ordering
-  ([`scripts/crossplatform_latency.py`](scripts/crossplatform_latency.py)). That
-  checks whether the deployment recommendation survives a change of instruction set
-  — the part that would actually mislead someone — but a shared CI runner cannot
-  produce publication-grade absolute numbers, and it measures neither energy nor
-  accuracy.
+- **Single hardware platform — and the ordering does not fully survive leaving it.**
+  Every published figure comes from one Apple M2. CI now re-times the seven committed
+  graphs on an x86 Linux runner on every push
+  ([`scripts/crossplatform_latency.py`](scripts/crossplatform_latency.py)), and the
+  latency ordering **changes**: Spearman rho ≈ 0.68, not 1.0. Both fp32 graphs move
+  sharply up the ranking on x86, and `mobilenetv3_small fp32` — 4th on the M2 at
+  1.40 ms — becomes the fastest configuration measured, beating its own int8 form,
+  which is the reverse of the M2 result. Quantisation buys much less on x86 than it
+  does on Apple Silicon. Those runs are indicative only: one pass on a shared virtual
+  machine, latency only, no energy and no accuracy. But they are enough to say that
+  **the ranking in this README is an Apple M2 ranking**, and that the deployment
+  recommendation below should be re-measured before being carried to x86.
 - **Energy is estimated, not metered.** On-die CPU package power, sampled at 200 ms
   and integrated over each window. Excludes DRAM, display and PSU losses. `codecarbon`
   cannot serve as an independent check: it reads Intel RAPL, which Apple Silicon

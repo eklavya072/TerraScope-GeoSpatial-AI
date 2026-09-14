@@ -344,6 +344,7 @@ table.data .num{text-align:right;font-family:var(--mono);font-size:.9rem;
   white-space:nowrap;font-variant-numeric:tabular-nums}
 table.data th.num{text-align:right}
 table.data .model{font-family:var(--mono);font-size:.86rem;color:var(--ink)}
+table.data .model .prec{display:block;font-size:.74rem;color:var(--ink-faint);letter-spacing:.02em}
 table.data .dim{color:var(--ink-faint)}
 .verdict{font-size:.88rem;font-weight:600}
 .verdict.hit{color:var(--brand)}

@@ -269,7 +269,8 @@ function spacedLabel(name) {
     }
     var body = rows.map(function (r) {
       if (r.error) {
-        return '<tr><td class="model">' + r.model + '</td>' +
+        return '<tr><td class="model">' + r.model +
+               '<span class="prec">' + precision + '</span></td>' +
                '<td colspan="6" class="dim">did not run: ' + r.error + '</td></tr>';
       }
       var verdict = truth == null
@@ -278,7 +279,8 @@ function spacedLabel(name) {
                              : '<span class="verdict miss">wrong</span>');
       var c = r.config;
       return '<tr>' +
-        '<td class="model">' + r.model + '</td>' +
+        '<td class="model">' + r.model +
+          '<span class="prec">' + precision + '</span></td>' +
         '<td>' + (r.label || '—') + '<br>' + verdict + '</td>' +
         '<td class="num">' + r.confidence.toFixed(1) + '%</td>' +
         '<td class="num">' + r.ms.toFixed(2) + '</td>' +
@@ -302,7 +304,8 @@ function spacedLabel(name) {
     var note = 'Browser ms is the median of ' + RUNS + ' runs on your machine ' +
       'through WebAssembly, after ' + WARMUP + ' warm-up runs. Acc %, J/1k and ' +
       'M2 p95 come from the benchmark on an Apple M2 at one thread, not from ' +
-      'this machine.';
+      'this machine, and describe each model at ' + precision + ' -- the ' +
+      'precision selected above, not the model\'s best configuration.';
     if (missed.length) {
       note += ' ' + missed.length + ' of ' + rows.length + ' models read this ' +
         'tile as something else, confidently, and at full speed: ' +
